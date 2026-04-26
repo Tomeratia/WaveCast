@@ -28,5 +28,9 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }: { addUtilities: (u: Record<string, Record<string, string>>) => void }) {
+      addUtilities({ '.scrollbar-none': { 'scrollbar-width': 'none', '-ms-overflow-style': 'none' } });
+    },
+  ],
 } satisfies Config;

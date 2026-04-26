@@ -5,6 +5,9 @@ export interface NormalizedForecast {
   swellDirection: number;    // degrees 0–360
   windSpeed: number;         // km/h
   windDirection: number;     // degrees 0–360
+  windGusts: number;         // km/h
+  temperature: number;       // °C
+  pressure: number;          // hPa
   timestamp: string;         // ISO 8601
 }
 
