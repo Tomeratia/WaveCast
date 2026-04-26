@@ -71,8 +71,8 @@ function SpotScrollBar() {
                 {ls?.loading ? (
                   <div className="h-5 w-full rounded bg-ocean-700 animate-pulse" />
                 ) : ls?.score ? (
-                  <span className={`rounded px-2 py-0.5 text-xs font-bold ${scoreColor(sc)}`}>
-                    {scoreLabel(sc)} {sc}
+                  <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${scoreColor(sc)}`}>
+                    {scoreLabel(sc)}
                   </span>
                 ) : (
                   <span className="text-xs text-ocean-400">N/A</span>
@@ -124,9 +124,8 @@ function SpotGridCard({ spot }: { spot: SpotDTO }) {
             {ls.loading ? (
               <Spinner className="h-5 w-5" />
             ) : ls.score ? (
-              <span className={`rounded-lg px-2 py-1 text-xs font-bold ${scoreColor(sc)}`}>
-                {scoreLabel(sc)}<br />
-                <span className="text-[10px] font-normal opacity-80">{sc}/100</span>
+              <span className={`rounded-lg px-2 py-1 text-xs font-bold uppercase ${scoreColor(sc)}`}>
+                {scoreLabel(sc)}
               </span>
             ) : (
               <span className="text-xs text-gray-400">N/A</span>

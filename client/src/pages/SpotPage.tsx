@@ -1,11 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { useMemo } from 'react';
-import { ArrowLeft, Wind, Waves as WavesIcon, Thermometer, Gauge } from 'lucide-react';
+import { ArrowLeft, Wind, Waves as WavesIcon, Thermometer, Gauge, Video } from 'lucide-react';
 import { Spinner } from '../components/ui/Spinner';
-import { ForecastChart } from '../components/charts/ForecastChart';
 import { useSpotForecast } from '../hooks/useSpotForecast';
 import { DEMO_SPOTS } from '../data/spots';
 import { degreesToCompass } from '../utils/wind';
+import { useUnits } from '../context/UnitsContext';
 import type { ForecastSlot } from '@shared/types';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -16,6 +16,14 @@ function scoreColor(score: number): string {
   if (score >= 25) return 'bg-score-fair text-gray-900';
   if (score > 5)   return 'bg-score-poor text-white';
   return 'bg-gray-400 text-white';
+}
+
+function scoreBorderColor(score: number): string {
+  if (score >= 75) return 'border-score-epic';
+  if (score >= 50) return 'border-score-good';
+  if (score >= 25) return 'border-score-fair';
+  if (score > 5)   return 'border-score-poor';
+  return 'border-gray-400';
 }
 
 function scoreLabel(score: number): string {
@@ -29,9 +37,8 @@ function scoreLabel(score: number): string {
 function WindArrow({ deg }: { deg: number }) {
   return (
     <span
-      className="inline-block text-base leading-none"
+      className="inline-block leading-none"
       style={{ transform: `rotate(${deg}deg)`, display: 'inline-block' }}
-      title={`${Math.round(deg)}°`}
     >
       ↑
     </span>
@@ -42,96 +49,93 @@ function waveEnergy(height: number, period: number): number {
   return Math.round(0.5 * 1025 * 9.81 * height * height * period / 1000);
 }
 
-// ── Condition rating bar ──────────────────────────────────────────────────────
+// ── Rating bar ────────────────────────────────────────────────────────────────
 
 function RatingBar({ score }: { score: number }) {
-  const segments = [
-    { label: 'FLAT',  max: 5,   color: 'bg-gray-400' },
-    { label: 'POOR',  max: 25,  color: 'bg-score-poor' },
-    { label: 'FAIR',  max: 50,  color: 'bg-score-fair' },
-    { label: 'GOOD',  max: 75,  color: 'bg-score-good' },
-    { label: 'EPIC',  max: 100, color: 'bg-score-epic' },
-  ];
   const pct = Math.min(100, Math.max(0, score));
   return (
     <div className="w-full">
-      <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-white/20">
         <div
           className={`absolute left-0 top-0 h-full transition-all duration-500 ${scoreColor(score).split(' ')[0]}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-        {segments.map((s) => (
-          <span key={s.label}>{s.label}</span>
-        ))}
+      <div className="mt-1 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-ocean-300 opacity-80">
+        <span>Flat</span><span>Poor</span><span>Fair</span><span>Good</span><span>Epic</span>
       </div>
     </div>
   );
 }
 
-// ── Current conditions panel ──────────────────────────────────────────────────
+// ── Current conditions ────────────────────────────────────────────────────────
 
 function CurrentConditions({ slot }: { slot: ForecastSlot }) {
+  const { formatHeight, formatSpeed } = useUnits();
   const f = slot.forecast;
   const energy = waveEnergy(f.swellHeight, f.swellPeriod);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Surf height */}
-      <div className="rounded-xl bg-ocean-900 p-4 text-white">
+      <div className={`rounded-xl border-l-4 ${scoreBorderColor(slot.score.overall)} bg-ocean-900 p-5 text-white`}>
         <div className="mb-1 flex items-center gap-2 text-ocean-300 text-xs font-semibold uppercase tracking-wider">
           <WavesIcon className="h-4 w-4" /> Surf Height
         </div>
-        <div className="text-4xl font-bold">
-          {f.swellHeight.toFixed(1)}
-          <span className="ml-1 text-lg font-normal text-ocean-300">m</span>
+        <div className="text-4xl font-bold tracking-tight">
+          {formatHeight(f.swellHeight)}
         </div>
-        <div className="mt-2 text-sm text-ocean-300">
-          {(f.swellHeight * 3.28).toFixed(1)} ft
+        <div className="mt-3 inline-block rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide">
+          <span className={`rounded px-2 py-0.5 ${scoreColor(slot.score.overall)}`}>
+            {scoreLabel(slot.score.overall)}
+          </span>
         </div>
       </div>
 
       {/* Swell */}
-      <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-800">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <div className="rounded-xl bg-white p-5 shadow dark:bg-gray-800">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
           Primary Swell
         </div>
         <div className="text-2xl font-bold text-ocean-800 dark:text-ocean-200">
-          {f.swellHeight.toFixed(1)} m @ {Math.round(f.swellPeriod)}s
+          {formatHeight(f.swellHeight)} @ {Math.round(f.swellPeriod)}s
         </div>
-        <div className="mt-1 flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+        <div className="mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <WindArrow deg={f.swellDirection} />
           <span>{degreesToCompass(f.swellDirection)} {Math.round(f.swellDirection)}°</span>
         </div>
-        <div className="mt-2 text-xs text-gray-400">Energy: {energy} kJ/m²</div>
+        <div className="mt-2 text-xs text-gray-400">
+          Energy: {energy} kJ/m²
+        </div>
       </div>
 
       {/* Wind */}
-      <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-800">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          <span className="flex items-center gap-1"><Wind className="h-3 w-3" /> Wind</span>
+      <div className="rounded-xl bg-white p-5 shadow dark:bg-gray-800">
+        <div className="mb-3 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <Wind className="h-3.5 w-3.5" /> Wind
         </div>
         <div className="text-2xl font-bold text-ocean-800 dark:text-ocean-200">
-          {Math.round(f.windSpeed)} km/h
+          {formatSpeed(f.windSpeed)}
         </div>
-        <div className="mt-1 flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+        <div className="mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <WindArrow deg={f.windDirection} />
           <span>{degreesToCompass(f.windDirection)} {Math.round(f.windDirection)}°</span>
         </div>
-        <div className="mt-2 text-xs text-gray-400">Gusts: {Math.round(f.windGusts)} km/h</div>
+        <div className="mt-2 text-xs text-gray-400">
+          Gusts: {formatSpeed(f.windGusts)}
+        </div>
       </div>
 
       {/* Conditions */}
-      <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-800">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <div className="rounded-xl bg-white p-5 shadow dark:bg-gray-800">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
           Conditions
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <Thermometer className="h-4 w-4 text-orange-400" />
           <span>{Math.round(f.temperature)}°C</span>
         </div>
-        <div className="mt-1 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <div className="mt-2 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
           <Gauge className="h-4 w-4 text-blue-400" />
           <span>{Math.round(f.pressure)} hPa</span>
         </div>
@@ -143,13 +147,13 @@ function CurrentConditions({ slot }: { slot: ForecastSlot }) {
   );
 }
 
-// ── Daily forecast table row ──────────────────────────────────────────────────
+// ── Daily forecast table ──────────────────────────────────────────────────────
 
 interface DayGroup {
   date: string;
-  morning: ForecastSlot | null;   // ~6am
-  noon: ForecastSlot | null;      // ~12pm
-  evening: ForecastSlot | null;   // ~6pm
+  morning: ForecastSlot | null;
+  noon: ForecastSlot | null;
+  evening: ForecastSlot | null;
 }
 
 function groupByDay(hourly: ForecastSlot[]): DayGroup[] {
@@ -170,23 +174,24 @@ function groupByDay(hourly: ForecastSlot[]): DayGroup[] {
     }));
 }
 
-function DayTableRow({ slot, label }: { slot: ForecastSlot | null; label: string }) {
-  if (!slot) return <td className="px-3 py-2 text-center text-gray-400 text-sm">—</td>;
+function DayTableCell({ slot }: { slot: ForecastSlot | null }) {
+  const { formatHeight, formatSpeed } = useUnits();
+  if (!slot) return <td className="px-2 py-3 text-center text-gray-300 dark:text-gray-600">—</td>;
   const f = slot.forecast;
   const sc = slot.score.overall;
   const energy = waveEnergy(f.swellHeight, f.swellPeriod);
   return (
-    <td className="px-2 py-2 text-sm">
-      <div className="flex flex-col items-center gap-1">
-        <span className={`rounded px-2 py-0.5 text-xs font-bold ${scoreColor(sc)}`}>
-          {scoreLabel(sc)} {sc}
+    <td className="px-3 py-3 text-sm">
+      <div className="flex flex-col items-center gap-1.5">
+        <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${scoreColor(sc)}`}>
+          {scoreLabel(sc)}
         </span>
-        <span className="text-ocean-700 dark:text-ocean-300 font-semibold">
-          {f.swellHeight.toFixed(1)}m @ {Math.round(f.swellPeriod)}s
+        <span className="font-semibold text-ocean-700 dark:text-ocean-300">
+          {formatHeight(f.swellHeight)} @ {Math.round(f.swellPeriod)}s
         </span>
         <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs">
           <WindArrow deg={f.windDirection} />
-          {Math.round(f.windSpeed)} km/h
+          {formatSpeed(f.windSpeed)}
         </span>
         <span className="text-gray-400 text-xs">{energy} kJ/m²</span>
       </div>
@@ -202,7 +207,7 @@ function DailyForecastTable({ hourly }: { hourly: ForecastSlot[] }) {
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead>
           <tr className="bg-gray-50 dark:bg-gray-800 text-xs font-semibold uppercase tracking-wider text-gray-500">
-            <th className="px-4 py-3 text-left">Date</th>
+            <th className="px-4 py-3 text-left w-28">Date</th>
             <th className="px-2 py-3 text-center">6 AM</th>
             <th className="px-2 py-3 text-center">Noon</th>
             <th className="px-2 py-3 text-center">6 PM</th>
@@ -214,17 +219,54 @@ function DailyForecastTable({ hourly }: { hourly: ForecastSlot[] }) {
             const dayStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             return (
               <tr key={date} className="hover:bg-ocean-50 dark:hover:bg-ocean-900/20 transition-colors">
-                <td className="px-4 py-2 font-semibold text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
                   {dayStr}
                 </td>
-                <DayTableRow slot={morning} label="6 AM" />
-                <DayTableRow slot={noon} label="Noon" />
-                <DayTableRow slot={evening} label="6 PM" />
+                <DayTableCell slot={morning} />
+                <DayTableCell slot={noon} />
+                <DayTableCell slot={evening} />
               </tr>
             );
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// ── Surf Cameras ──────────────────────────────────────────────────────────────
+
+function SurfCameras({ cameras }: { cameras: { label: string; embedUrl: string }[] }) {
+  if (cameras.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-gray-400">
+        <Video className="mx-auto mb-2 h-8 w-8 opacity-40" />
+        <p className="text-sm">No live cameras available for this spot.</p>
+        <p className="mt-1 text-xs opacity-70">Camera feeds are added as they become publicly available.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {cameras.map((cam) => (
+        <div key={cam.label} className="overflow-hidden rounded-xl bg-black shadow">
+          <div className="flex items-center gap-2 bg-gray-900 px-3 py-2">
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-xs font-semibold text-white uppercase tracking-wide">{cam.label}</span>
+            <span className="ml-auto text-[10px] text-gray-400">LIVE</span>
+          </div>
+          <div className="aspect-video">
+            <iframe
+              src={cam.embedUrl}
+              className="h-full w-full"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              title={cam.label}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -247,7 +289,7 @@ export function SpotPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Hero header */}
+      {/* Hero */}
       <div className="bg-ocean-900 text-white">
         <div className="mx-auto max-w-7xl px-4 py-6">
           <Link to="/" className="mb-4 inline-flex items-center gap-2 text-ocean-300 hover:text-white text-sm">
@@ -259,11 +301,11 @@ export function SpotPage() {
               <p className="mt-1 text-ocean-300">{spot.region}, {spot.country}</p>
             </div>
             {current && (
-              <div className="flex flex-col items-end gap-2">
-                <span className={`rounded-lg px-4 py-2 text-xl font-bold ${scoreColor(current.score.overall)}`}>
-                  {scoreLabel(current.score.overall)} — {current.score.overall}
+              <div className="flex flex-col items-end gap-2 min-w-[220px]">
+                <span className={`rounded-lg px-4 py-1.5 text-base font-bold uppercase tracking-wider ${scoreColor(current.score.overall)}`}>
+                  {scoreLabel(current.score.overall)}
                 </span>
-                <div className="w-64">
+                <div className="w-full">
                   <RatingBar score={current.score.overall} />
                 </div>
               </div>
@@ -287,30 +329,22 @@ export function SpotPage() {
 
         {current && !isLoading && (
           <>
-            {/* Current conditions */}
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">
-                Current Conditions
-              </h2>
+              <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">Current Conditions</h2>
               <CurrentConditions slot={current} />
             </section>
 
-            {/* 7-day forecast table */}
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">
-                7-Day Forecast
-              </h2>
+              <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">7-Day Forecast</h2>
               <DailyForecastTable hourly={hourly} />
             </section>
 
-            {/* Chart */}
             <section>
-              <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">
-                48-Hour Overview
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <Video className="h-5 w-5 text-red-500" />
+                Live Cameras
               </h2>
-              <div className="rounded-xl bg-white p-4 shadow dark:bg-gray-900">
-                <ForecastChart hourly={hourly} hours={48} />
-              </div>
+              <SurfCameras cameras={spot.cameras} />
             </section>
           </>
         )}

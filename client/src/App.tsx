@@ -5,9 +5,11 @@ import { SpotPage } from './pages/SpotPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { LoginPage } from './pages/LoginPage';
+import { UnitsProvider } from './context/UnitsContext';
 
 export default function App() {
   return (
+    <UnitsProvider>
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
@@ -23,5 +25,6 @@ export default function App() {
         <p>WaveCast · Free, open-source surf forecasting · Powered by Open-Meteo</p>
       </footer>
     </div>
+    </UnitsProvider>
   );
 }
