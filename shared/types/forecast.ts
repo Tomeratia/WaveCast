@@ -8,6 +8,9 @@ export interface NormalizedForecast {
   windGusts: number;         // km/h
   temperature: number;       // °C
   pressure: number;          // hPa
+  swellHeight2: number;      // secondary swell height, meters
+  swellPeriod2: number;      // secondary swell period, seconds
+  swellDirection2: number;   // secondary swell direction, degrees
   timestamp: string;         // ISO 8601
 }
 
