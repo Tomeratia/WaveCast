@@ -7,6 +7,7 @@ import { useSpotForecast } from '../hooks/useSpotForecast';
 import { DEMO_SPOTS } from '../data/spots';
 import { degreesToCompass } from '../utils/wind';
 import { useUnits } from '../context/UnitsContext';
+import { TidePanel } from '../components/ui/TidePanel';
 import type { ForecastSlot } from '@shared/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -460,6 +461,9 @@ export function SpotPage() {
                     })}
                   </div>
                 </div>
+
+                {/* Tides */}
+                <TidePanel lat={spot.lat} lon={spot.lng} />
               </div>
             )}
 
