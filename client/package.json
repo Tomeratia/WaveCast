@@ -13,6 +13,7 @@
     "@wavecast/shared": "*",
     "axios": "^1.7.0",
     "clsx": "^2.1.0",
+    "hls.js": "^1.6.16",
     "leaflet": "^1.9.0",
     "lucide-react": "^0.400.0",
     "react": "^18.3.0",
