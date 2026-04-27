@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import { useEffect, useState, useMemo } from 'react';
-import { Waves, MapPin, ChevronDown, ChevronRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { Waves, MapPin, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
 import { SpotMap } from '../components/map/SpotMap';
 import { Spinner } from '../components/ui/Spinner';
 import { DEMO_SPOTS } from '../data/spots';
@@ -76,36 +76,125 @@ function useLiveData() {
   return data;
 }
 
-// ── Horizontal spots scroll bar (top nav) ────────────────────────────────────
+// ── Search bar ────────────────────────────────────────────────────────────────
+
+function SearchBar() {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return DEMO_SPOTS.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.region.toLowerCase().includes(q) ||
+        s.country.toLowerCase().includes(q)
+    ).slice(0, 8);
+  }, [query]);
+
+  function handleSelect(id: string) {
+    setQuery('');
+    setOpen(false);
+    navigate(`/spot/${id}`);
+  }
+
+  return (
+    <div className="relative w-full max-w-md mx-auto">
+      <div className="flex items-center gap-2 bg-app-card border border-app-border rounded-xl px-4 py-2.5 focus-within:border-ocean-500 transition-colors">
+        <Search className="h-4 w-4 text-gray-500 shrink-0" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Search spots, regions, countries…"
+          className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-600 outline-none"
+        />
+        {query && (
+          <button onClick={() => { setQuery(''); inputRef.current?.focus(); }}>
+            <X className="h-4 w-4 text-gray-500 hover:text-gray-300" />
+          </button>
+        )}
+      </div>
+
+      {open && results.length > 0 && (
+        <div className="absolute top-full mt-1.5 left-0 right-0 bg-app-card border border-app-border rounded-xl shadow-2xl z-50 overflow-hidden">
+          {results.map((spot) => (
+            <button
+              key={spot.id}
+              onMouseDown={() => handleSelect(spot.id)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-app-muted transition-colors text-left"
+            >
+              <MapPin className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+              <div>
+                <div className="text-sm font-semibold text-white">{spot.name}</div>
+                <div className="text-[11px] text-gray-500">{spot.region}, {spot.country}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Horizontal spots scroll bar — grouped by continent ───────────────────────
 
 function SpotScrollBar({ liveData }: { liveData: Record<string, LiveData> }) {
+  // Build continent groups in order
+  const groups = useMemo(() =>
+    CONTINENTS.map((c) => ({
+      ...c,
+      spots: DEMO_SPOTS.filter((s) => c.countries.includes(s.country)),
+    })).filter((g) => g.spots.length > 0),
+  []);
+
   return (
-    <div className="bg-app-surface border-b border-app-border">
-      <div className="flex overflow-x-auto scrollbar-none">
-        {DEMO_SPOTS.map((spot) => {
-          const d = liveData[spot.id];
-          const sc = d?.score?.overall ?? 0;
-          return (
-            <Link
-              key={spot.id}
-              to={`/spot/${spot.id}`}
-              className="flex-shrink-0 px-3 py-2 text-center hover:bg-app-card transition-colors border-r border-app-border min-w-[90px]"
-            >
-              <div className="text-[11px] font-semibold text-gray-300 truncate">{spot.name}</div>
-              <div className="mt-0.5">
-                {d?.loading ? (
-                  <div className="h-3.5 w-full rounded bg-app-muted animate-pulse" />
-                ) : d?.score ? (
-                  <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-bold text-white uppercase ${scoreBg(sc)}`}>
-                    {scoreLabel(sc)}
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-gray-600">N/A</span>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+    <div className="bg-app-surface border-b border-app-border overflow-x-auto scrollbar-none">
+      <div className="flex min-w-max">
+        {groups.map((group, gi) => (
+          <div key={group.name} className={`flex items-stretch ${gi > 0 ? 'border-l-2 border-ocean-900' : ''}`}>
+            {/* Continent label */}
+            <div className="flex items-center px-2 py-1 bg-app-bg/60">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 writing-mode-vertical whitespace-nowrap"
+                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', lineHeight: 1 }}>
+                {group.name}
+              </span>
+            </div>
+            {/* Spots */}
+            <div className="flex">
+              {group.spots.map((spot) => {
+                const d = liveData[spot.id];
+                const sc = d?.score?.overall ?? 0;
+                return (
+                  <Link
+                    key={spot.id}
+                    to={`/spot/${spot.id}`}
+                    className="flex-shrink-0 px-3 py-2 text-center hover:bg-app-card transition-colors border-r border-app-border min-w-[80px] flex flex-col justify-center"
+                  >
+                    <div className="text-[11px] font-semibold text-gray-300 truncate leading-tight">{spot.name}</div>
+                    <div className="mt-1">
+                      {d?.loading ? (
+                        <div className="h-3 w-full rounded bg-app-muted animate-pulse" />
+                      ) : d?.score ? (
+                        <span className={`inline-block rounded px-1.5 py-px text-[10px] font-bold text-white uppercase ${scoreBg(sc)}`}>
+                          {scoreLabel(sc)}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-gray-600">—</span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -309,14 +398,15 @@ export function HomePage() {
       <SpotScrollBar liveData={liveData} />
 
       {/* Hero */}
-      <div className="bg-app-surface border-b border-app-border py-6 px-4 text-center">
-        <div className="flex items-center justify-center gap-3 text-3xl font-bold text-white">
+      <div className="bg-app-surface border-b border-app-border py-6 px-4">
+        <div className="flex items-center justify-center gap-3 text-3xl font-bold text-white mb-1.5">
           <Waves className="h-8 w-8 text-ocean-400" />
           WaveCast
         </div>
-        <p className="mt-1.5 text-gray-400 text-sm">
+        <p className="text-center text-gray-500 text-sm mb-5">
           Free, open-source surf forecasting · Powered by Open-Meteo
         </p>
+        <SearchBar />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 space-y-10">
