@@ -104,8 +104,7 @@ export function BestWindow({ slots }: BestWindowProps) {
         </div>
 
         <div className="text-right">
-          <div className={`text-3xl font-bold ${scoreColor(avgScore)}`}>{avgScore}</div>
-          <div className={`text-[10px] font-bold uppercase tracking-wider ${scoreColor(avgScore)}`}>
+          <div className={`text-xl font-bold uppercase tracking-wider ${scoreColor(avgScore)}`}>
             {scoreLabel(avgScore)}
           </div>
         </div>
