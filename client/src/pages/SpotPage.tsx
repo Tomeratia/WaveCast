@@ -1,8 +1,7 @@
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, Video, VideoOff, Thermometer, Gauge, Heart } from 'lucide-react';
+import { ArrowLeft, Thermometer, Gauge, Heart } from 'lucide-react';
 import { Spinner } from '../components/ui/Spinner';
-import { HlsPlayer } from '../components/ui/HlsPlayer';
 import { useSpotForecast } from '../hooks/useSpotForecast';
 import { DEMO_SPOTS } from '../data/spots';
 import { useAuth } from '../context/AuthContext';
@@ -251,81 +250,6 @@ function HourlyTable({ day }: { day: DayGroup }) {
   );
 }
 
-// ── Live cameras ──────────────────────────────────────────────────────────────
-
-function LiveCameras({ cameras }: { cameras: { label: string; hlsUrl: string }[] }) {
-  const [active, setActive] = useState(0);
-
-  if (cameras.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-app-border bg-app-card p-12 text-center gap-3">
-        <VideoOff className="h-8 w-8 text-gray-700" />
-        <p className="text-sm text-gray-500">No live cameras available for this spot.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {cameras.length > 1 && (
-        <div className="flex gap-2">
-          {cameras.map((cam, i) => (
-            <button
-              key={cam.label}
-              onClick={() => setActive(i)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                active === i
-                  ? 'bg-ocean-500 text-white'
-                  : 'bg-app-card border border-app-border text-gray-400 hover:text-white'
-              }`}
-            >
-              {cam.label}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="overflow-hidden rounded-xl bg-black border border-app-border">
-        <div className="flex items-center gap-2 bg-app-surface px-3 py-2 border-b border-app-border">
-          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-xs font-semibold text-white">{cameras[active]?.label}</span>
-          <span className="ml-auto text-[10px] font-bold text-red-400 tracking-widest">LIVE</span>
-          <Video className="h-3.5 w-3.5 text-gray-500" />
-        </div>
-        <div className="aspect-video">
-          <HlsPlayer key={cameras[active]?.hlsUrl} src={cameras[active]?.hlsUrl ?? ''} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-
-type Tab = 'forecast' | 'live';
-
-function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'forecast', label: 'Forecast' },
-    { id: 'live',     label: 'Live' },
-  ];
-  return (
-    <div className="flex border-b border-app-border">
-      {tabs.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          className={`px-5 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
-            tab === t.id
-              ? 'border-ocean-400 text-ocean-400'
-              : 'border-transparent text-gray-500 hover:text-gray-200'
-          }`}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // ── Current conditions summary strip ─────────────────────────────────────────
 
@@ -364,7 +288,6 @@ function CurrentStrip({ slot }: { slot: ForecastSlot }) {
 export function SpotPage() {
   const { spotId } = useParams<{ spotId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = (searchParams.get('tab') as Tab) ?? 'forecast';
 
   const spot = useMemo(() => DEMO_SPOTS.find((s) => s.id === spotId) ?? null, [spotId]);
   const { current, hourly, isLoading, error } = useSpotForecast(spot);
@@ -398,9 +321,7 @@ export function SpotPage() {
     }
   }
 
-  function setTab(t: Tab) { setSearchParams({ tab: t }, { replace: true }); }
-
-  if (!spot) {
+if (!spot) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
         <p className="text-gray-400">Spot not found.</p>
@@ -449,7 +370,6 @@ export function SpotPage() {
               )}
             </div>
           </div>
-          <TabBar tab={tab} onChange={setTab} />
         </div>
       </div>
 
@@ -469,9 +389,7 @@ export function SpotPage() {
 
         {!isLoading && current && (
           <>
-            {/* FORECAST tab */}
-            {tab === 'forecast' && (
-              <div className="space-y-6">
+            <div className="space-y-6">
                 {/* Best window today */}
                 {(() => {
                   const todaySlots = days.find((d) => d.date === todayDate)?.slots ?? [];
@@ -530,15 +448,6 @@ export function SpotPage() {
                 </div>
 
               </div>
-            )}
-
-            {/* LIVE tab */}
-            {tab === 'live' && (
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Live Cameras</h2>
-                <LiveCameras cameras={spot.cameras} />
-              </div>
-            )}
           </>
         )}
       </div>

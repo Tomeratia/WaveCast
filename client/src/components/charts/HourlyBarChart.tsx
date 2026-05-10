@@ -53,7 +53,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Toolti
 }
 
 export function HourlyBarChart({ slots, startHour = 5, endHour = 20 }: HourlyBarChartProps) {
-  const { formatHeight, formatSpeed } = useUnits();
+  const { formatHeight, formatSpeed, heightUnit } = useUnits();
 
   const data = useMemo(() => {
     return slots
@@ -63,9 +63,12 @@ export function HourlyBarChart({ slots, startHour = 5, endHour = 20 }: HourlyBar
       })
       .map((s) => {
         const h = new Date(s.forecast.timestamp).getUTCHours();
+        const heightInUnits = heightUnit === 'ft'
+          ? Number((s.forecast.swellHeight * 3.281).toFixed(2))
+          : Number(s.forecast.swellHeight.toFixed(2));
         return {
           hour: `${h.toString().padStart(2, '0')}:00`,
-          height: Number(s.forecast.swellHeight.toFixed(2)),
+          height: heightInUnits,
           period: Math.round(s.forecast.swellPeriod),
           wind: Number(s.forecast.windSpeed.toFixed(1)),
           score: s.score.overall,
@@ -73,7 +76,7 @@ export function HourlyBarChart({ slots, startHour = 5, endHour = 20 }: HourlyBar
           windLabel: formatSpeed(s.forecast.windSpeed),
         };
       });
-  }, [slots, startHour, endHour, formatHeight, formatSpeed]);
+  }, [slots, startHour, endHour, formatHeight, formatSpeed, heightUnit]);
 
   if (data.length === 0) {
     return (
@@ -99,7 +102,7 @@ export function HourlyBarChart({ slots, startHour = 5, endHour = 20 }: HourlyBar
             tick={{ fontSize: 11, fill: '#9ca3af' }}
             axisLine={false}
             tickLine={false}
-            label={{ value: 'Wave (m)', angle: -90, position: 'insideLeft', offset: 25, fontSize: 10, fill: '#6b7280' }}
+            label={{ value: `Wave (${heightUnit})`, angle: -90, position: 'insideLeft', offset: 25, fontSize: 10, fill: '#6b7280' }}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1f2937', opacity: 0.4 }} />
           <Bar dataKey="height" radius={[4, 4, 0, 0]}>
