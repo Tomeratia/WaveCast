@@ -19,6 +19,14 @@ interface HourlyBarChartProps {
   endHour?: number;
 }
 
+function scoreLabel(score: number): string {
+  if (score >= 75) return 'Epic';
+  if (score >= 50) return 'Good';
+  if (score >= 25) return 'Fair';
+  if (score > 5)   return 'Poor';
+  return 'Flat';
+}
+
 function scoreColor(score: number): string {
   if (score >= 75) return '#8b5cf6'; // epic
   if (score >= 50) return '#22c55e'; // good
@@ -47,7 +55,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Toolti
       <div className="font-bold text-white mb-1">{d.hour}</div>
       <div className="text-gray-300">Wave: <span className="font-semibold text-white">{d.heightLabel}</span> @ {d.period}s</div>
       <div className="text-gray-300">Wind: <span className="font-semibold text-white">{d.windLabel}</span></div>
-      <div className="text-gray-300">Score: <span className="font-bold" style={{ color: scoreColor(d.score) }}>{d.score}</span></div>
+      <div className="text-gray-300">Score: <span className="font-bold" style={{ color: scoreColor(d.score) }}>{scoreLabel(d.score)}</span></div>
     </div>
   );
 }
