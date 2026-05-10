@@ -9,7 +9,9 @@ import { useAuth } from '../context/AuthContext';
 import { getFavorites, addFavorite, removeFavorite } from '../services/favoritesClient';
 import { degreesToCompass } from '../utils/wind';
 import { useUnits } from '../context/UnitsContext';
-import { TidePanel } from '../components/ui/TidePanel';
+import { TideChart } from '../components/charts/TideChart';
+import { HourlyBarChart } from '../components/charts/HourlyBarChart';
+import { BestWindow } from '../components/ui/BestWindow';
 import type { ForecastSlot } from '@shared/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -470,6 +472,28 @@ export function SpotPage() {
             {/* FORECAST tab */}
             {tab === 'forecast' && (
               <div className="space-y-6">
+                {/* Best window today */}
+                {(() => {
+                  const todaySlots = days.find((d) => d.date === todayDate)?.slots ?? [];
+                  return todaySlots.length > 0 ? <BestWindow slots={todaySlots} /> : null;
+                })()}
+
+                {/* Hourly bar chart — today */}
+                {(() => {
+                  const todaySlots = days.find((d) => d.date === todayDate)?.slots ?? [];
+                  return todaySlots.length > 0 ? (
+                    <div className="rounded-xl border border-app-border bg-app-card p-5">
+                      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        Hourly Forecast — Today
+                      </h2>
+                      <HourlyBarChart slots={todaySlots} />
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Tide chart */}
+                <TideChart lat={spot.lat} lon={spot.lng} />
+
                 {/* Daily overview */}
                 <div>
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-3">Daily Overview</h2>
@@ -505,8 +529,6 @@ export function SpotPage() {
                   </div>
                 </div>
 
-                {/* Tides */}
-                <TidePanel lat={spot.lat} lon={spot.lng} />
               </div>
             )}
 
