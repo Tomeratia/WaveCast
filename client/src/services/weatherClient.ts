@@ -13,6 +13,7 @@ interface MarineResponse {
     swell_wave_height: number[];
     swell_wave_period: number[];
     swell_wave_direction: number[];
+    sea_surface_temperature: number[];
   };
 }
 
@@ -33,7 +34,7 @@ export async function fetchForecast(lat: number, lon: number): Promise<Normalize
       params: {
         latitude: lat,
         longitude: lon,
-        hourly: 'wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_period,swell_wave_direction',
+        hourly: 'wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_period,swell_wave_direction,sea_surface_temperature',
         forecast_days: 7,
       },
     }),
@@ -66,6 +67,7 @@ export async function fetchForecast(lat: number, lon: number): Promise<Normalize
     windDirection: wind?.wind_direction_10m[i] ?? 0,
     windGusts: wind?.wind_gusts_10m[i] ?? 0,
     temperature: wind?.temperature_2m[i] ?? 0,
+    seaTemperature: marine.sea_surface_temperature[i] ?? 0,
     pressure: wind?.surface_pressure[i] ?? 0,
     timestamp: new Date(time).toISOString(),
   }));

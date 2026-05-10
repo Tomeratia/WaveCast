@@ -177,7 +177,7 @@ function HourlyTable({ day }: { day: DayGroup }) {
             <th className="text-left py-2.5 px-4">Secondary Swell</th>
             <th className="text-left py-2.5 px-4">Wind</th>
             <th className="text-right py-2.5 px-4">Energy</th>
-            <th className="text-right py-2.5 px-4">Temp</th>
+            <th className="text-right py-2.5 px-4">Air / Water</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-app-border/60">
@@ -252,9 +252,20 @@ function HourlyTable({ day }: { day: DayGroup }) {
                   <span className="text-gray-600 text-xs ml-1">kJ</span>
                 </td>
 
-                {/* Temp */}
+                {/* Air / Water temp */}
                 <td className="py-3.5 px-4 text-right">
-                  <span className="text-gray-400 text-sm">{Math.round(f.temperature)}°C</span>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <div className="flex items-center gap-1 text-sm">
+                      <span className="text-gray-600 text-[10px]">Air</span>
+                      <span className="text-gray-400">{Math.round(f.temperature)}°C</span>
+                    </div>
+                    {f.seaTemperature > 0 && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <span className="text-gray-600 text-[10px]">Water</span>
+                        <span className="text-cyan-400">{Math.round(f.seaTemperature)}°C</span>
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
             );
@@ -299,8 +310,16 @@ function CurrentStrip({ slot }: { slot: ForecastSlot }) {
       <div className="h-3 w-px bg-app-border" />
       <div className="flex items-center gap-1.5">
         <Thermometer className="h-3.5 w-3.5 text-orange-300" />
+        <span className="text-gray-500 text-xs">Air</span>
         <span className="text-gray-400">{Math.round(f.temperature)}°C</span>
       </div>
+      {f.seaTemperature > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Thermometer className="h-3.5 w-3.5 text-cyan-400" />
+          <span className="text-gray-500 text-xs">Water</span>
+          <span className="text-cyan-400">{Math.round(f.seaTemperature)}°C</span>
+        </div>
+      )}
       <div className="flex items-center gap-1.5">
         <Gauge className="h-3.5 w-3.5 text-blue-400" />
         <span className="text-gray-400">{Math.round(f.pressure)} hPa</span>

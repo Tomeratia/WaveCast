@@ -127,6 +127,12 @@ export function BestWindow({ slots }: BestWindowProps) {
             {f.temperature ? `${Math.round(f.temperature)}°C` : '—'}
           </div>
           <div className="text-[10px] text-gray-500">air</div>
+          {f.seaTemperature > 0 && (
+            <div className="mt-1 text-sm font-bold text-cyan-400">{Math.round(f.seaTemperature)}°C</div>
+          )}
+          {f.seaTemperature > 0 && (
+            <div className="text-[10px] text-gray-500">water</div>
+          )}
         </div>
       </div>
     </div>

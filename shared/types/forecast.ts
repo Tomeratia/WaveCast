@@ -6,7 +6,8 @@ export interface NormalizedForecast {
   windSpeed: number;         // km/h
   windDirection: number;     // degrees 0–360
   windGusts: number;         // km/h
-  temperature: number;       // °C
+  temperature: number;       // °C air
+  seaTemperature: number;    // °C sea surface
   pressure: number;          // hPa
   swellHeight2: number;      // secondary swell height, meters
   swellPeriod2: number;      // secondary swell period, seconds
