@@ -30,6 +30,9 @@ app.use(cookieParser());
 // Auth middleware — checks all routes, skips PUBLIC_ROUTES
 app.use(verifyToken);
 
+// Health check — used by keep-alive ping to prevent Render cold starts
+app.get('/health', (_req, res) => { res.json({ ok: true }); });
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/forecast', forecastRoutes);

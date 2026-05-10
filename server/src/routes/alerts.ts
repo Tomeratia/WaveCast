@@ -8,7 +8,7 @@ import type { ApiResponse } from '@wavecast/shared';
 const router = Router();
 
 const createAlertSchema = z.object({
-  spotId: z.string().uuid(),
+  spotId: z.string().min(1),
   minScore: z.number().int().min(0).max(100),
   timePref: z.enum(['dawn', 'morning', 'any']),
 });

@@ -7,6 +7,9 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+// Keep-alive ping every 9 minutes to prevent Render cold starts
+setInterval(() => { api.get('/health').catch(() => {}); }, 9 * 60 * 1000);
+
 // 401 interceptor: attempt token refresh, then retry
 let isRefreshing = false;
 let pendingRequests: Array<(token: string) => void> = [];

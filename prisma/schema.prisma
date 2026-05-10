@@ -22,23 +22,6 @@ model User {
   @@map("users")
 }
 
-// ─── Surf Spot ───────────────────────────────────────────────────────────────
-
-model Spot {
-  id        String     @id @default(uuid())
-  name      String
-  lat       Float
-  lng       Float
-  country   String
-  region    String
-  createdAt DateTime   @default(now()) @map("created_at")
-
-  favorites Favorite[]
-  cache     ForecastCache[]
-
-  @@map("spots")
-}
-
 // ─── Forecast Cache (TTL = 3 hours) ──────────────────────────────────────────
 
 model ForecastCache {
@@ -47,8 +30,6 @@ model ForecastCache {
   provider  String
   data      Json
   fetchedAt DateTime @default(now()) @map("fetched_at")
-
-  spot      Spot     @relation(fields: [spotId], references: [id])
 
   @@unique([spotId, provider])
   @@index([fetchedAt])
@@ -64,7 +45,6 @@ model Favorite {
   createdAt DateTime @default(now()) @map("created_at")
 
   user      User     @relation(fields: [userId], references: [id])
-  spot      Spot     @relation(fields: [spotId], references: [id])
 
   @@unique([userId, spotId])
   @@map("favorites")

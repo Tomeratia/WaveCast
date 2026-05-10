@@ -7,9 +7,11 @@ import { AlertsPage } from './pages/AlertsPage';
 import { LoginPage } from './pages/LoginPage';
 import { AgentPage } from './pages/AgentPage';
 import { UnitsProvider } from './context/UnitsContext';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
   return (
+    <AuthProvider>
     <UnitsProvider>
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -28,5 +30,6 @@ export default function App() {
       </footer>
     </div>
     </UnitsProvider>
+    </AuthProvider>
   );
 }

@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom';
-import { Waves, Heart, Bell, Bot } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Waves, Heart, Bell, Bot, LogIn, LogOut, User } from 'lucide-react';
 import { useUnits } from '../../context/UnitsContext';
+import { useAuth } from '../../context/AuthContext';
+import { logoutApi } from '../../services/authClient';
 import type { HeightUnit, SpeedUnit } from '../../context/UnitsContext';
 
 function SegmentToggle<T extends string>({
@@ -33,6 +35,14 @@ function SegmentToggle<T extends string>({
 
 export function Navbar() {
   const { heightUnit, speedUnit, setHeightUnit, setSpeedUnit } = useUnits();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try { await logoutApi(); } catch { /* ignore */ }
+    logout();
+    navigate('/login');
+  }
 
   return (
     <nav className="border-b border-app-border bg-app-surface text-gray-200 sticky top-0 z-50">
@@ -77,6 +87,27 @@ export function Navbar() {
             <Bot className="h-4 w-4" />
             <span className="hidden sm:inline">AI Assistant</span>
           </Link>
+
+          <div className="h-4 w-px bg-app-border hidden sm:block" />
+
+          {user ? (
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-gray-400" />
+              <span className="hidden sm:inline text-sm text-gray-400">{user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <Link to="/login" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign in</span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>

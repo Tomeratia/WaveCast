@@ -1,10 +1,12 @@
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { useMemo, useState } from 'react';
-import { ArrowLeft, Video, VideoOff, Thermometer, Gauge } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { ArrowLeft, Video, VideoOff, Thermometer, Gauge, Heart } from 'lucide-react';
 import { Spinner } from '../components/ui/Spinner';
 import { HlsPlayer } from '../components/ui/HlsPlayer';
 import { useSpotForecast } from '../hooks/useSpotForecast';
 import { DEMO_SPOTS } from '../data/spots';
+import { useAuth } from '../context/AuthContext';
+import { getFavorites, addFavorite, removeFavorite } from '../services/favoritesClient';
 import { degreesToCompass } from '../utils/wind';
 import { useUnits } from '../context/UnitsContext';
 import { TidePanel } from '../components/ui/TidePanel';
@@ -367,6 +369,33 @@ export function SpotPage() {
   const days = useMemo(() => groupByDay(hourly), [hourly]);
   const todayDate = new Date().toISOString().slice(0, 10);
 
+  const { accessToken } = useAuth();
+  const [isFav, setIsFav] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken || !spotId) return;
+    getFavorites(accessToken).then((favs) => {
+      setIsFav(favs.some((f) => f.id === spotId));
+    }).catch(() => {});
+  }, [accessToken, spotId]);
+
+  async function toggleFav() {
+    if (!accessToken || !spotId) return;
+    setFavLoading(true);
+    try {
+      if (isFav) {
+        await removeFavorite(accessToken, spotId);
+        setIsFav(false);
+      } else {
+        await addFavorite(accessToken, spotId);
+        setIsFav(true);
+      }
+    } catch { /* ignore */ } finally {
+      setFavLoading(false);
+    }
+  }
+
   function setTab(t: Tab) { setSearchParams({ tab: t }, { replace: true }); }
 
   if (!spot) {
@@ -395,14 +424,28 @@ export function SpotPage() {
                 <p className="text-sm text-gray-500">{spot.region}, {spot.country}</p>
               </div>
             </div>
-            {current && (
-              <div className="flex items-center gap-3">
-                <Stars score={sc} />
-                <span className={`rounded-lg px-3 py-1 text-sm font-bold text-white ${scoreBg(sc)}`}>
-                  {scoreLabel(sc)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {current && (
+                <>
+                  <Stars score={sc} />
+                  <span className={`rounded-lg px-3 py-1 text-sm font-bold text-white ${scoreBg(sc)}`}>
+                    {scoreLabel(sc)}
+                  </span>
+                </>
+              )}
+              {accessToken && (
+                <button
+                  onClick={toggleFav}
+                  disabled={favLoading}
+                  title={isFav ? 'Remove from favourites' : 'Add to favourites'}
+                  className={`rounded-lg p-2 transition-colors ${
+                    isFav ? 'text-red-500 hover:text-red-400' : 'text-gray-600 hover:text-red-400'
+                  } disabled:opacity-40`}
+                >
+                  <Heart className="h-5 w-5" fill={isFav ? 'currentColor' : 'none'} />
+                </button>
+              )}
+            </div>
           </div>
           <TabBar tab={tab} onChange={setTab} />
         </div>
