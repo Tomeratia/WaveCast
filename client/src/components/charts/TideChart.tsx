@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { Waves, ArrowUp, ArrowDown } from 'lucide-react';
 import { fetchOpenMeteoTides, type OpenMeteoTideData } from '../../services/openMeteoTideClient';
+import { useUnits } from '../../context/UnitsContext';
 
 interface TideChartProps {
   lat: number;
@@ -18,7 +19,7 @@ interface TideChartProps {
 }
 
 interface TooltipPayload {
-  payload: { hour: string; height: number };
+  payload: { hour: string; height: number; heightLabel: string };
 }
 
 function TideTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) {
@@ -27,7 +28,7 @@ function TideTooltip({ active, payload }: { active?: boolean; payload?: TooltipP
   return (
     <div className="rounded-lg border border-app-border bg-app-surface/95 px-3 py-2 text-xs shadow-xl">
       <div className="font-bold text-white">{d.hour}</div>
-      <div className="text-ocean-300">{d.height.toFixed(2)} m</div>
+      <div className="text-ocean-300">{d.heightLabel}</div>
     </div>
   );
 }
@@ -35,6 +36,7 @@ function TideTooltip({ active, payload }: { active?: boolean; payload?: TooltipP
 export function TideChart({ lat, lon }: TideChartProps) {
   const [data, setData] = useState<OpenMeteoTideData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { heightUnit, formatHeight } = useUnits();
 
   useEffect(() => {
     setLoading(true);
@@ -52,10 +54,12 @@ export function TideChart({ lat, lon }: TideChartProps) {
 
     const chartData = todayPoints.map((p) => {
       const h = new Date(p.timestamp).getUTCHours();
+      const heightInUnits = heightUnit === 'ft' ? Number((p.height * 3.281).toFixed(3)) : Number(p.height.toFixed(3));
       return {
         hour: `${h.toString().padStart(2, '0')}:00`,
         rawTimestamp: p.timestamp,
-        height: Number(p.height.toFixed(3)),
+        height: heightInUnits,
+        heightLabel: formatHeight(p.height),
       };
     });
 
@@ -71,8 +75,12 @@ export function TideChart({ lat, lon }: TideChartProps) {
       }
     }
 
-    return { chartData, todayExtremes, currentHeight: closest?.height ?? null, todayDateStr: today };
-  }, [data]);
+    const currentHeightM = closest?.height ?? null;
+    const currentHeight = currentHeightM !== null
+      ? (heightUnit === 'ft' ? Number((currentHeightM * 3.281).toFixed(2)) : Number(currentHeightM.toFixed(2)))
+      : null;
+    return { chartData, todayExtremes, currentHeight, currentHeightM, todayDateStr: today };
+  }, [data, heightUnit, formatHeight]);
 
   if (loading) {
     return (
@@ -109,7 +117,7 @@ export function TideChart({ lat, lon }: TideChartProps) {
         {currentHeight !== null && (
           <div className="text-right">
             <div className="text-[10px] uppercase tracking-wider text-gray-500">Now</div>
-            <div className="text-lg font-bold text-ocean-300">{currentHeight.toFixed(2)} m</div>
+            <div className="text-lg font-bold text-ocean-300">{currentHeight} {heightUnit}</div>
           </div>
         )}
       </div>
@@ -134,6 +142,8 @@ export function TideChart({ lat, lon }: TideChartProps) {
             axisLine={false}
             tickLine={false}
             domain={[minH - padding, maxH + padding]}
+            tickFormatter={(v: number) => `${v.toFixed(2)}`}
+            unit={` ${heightUnit}`}
           />
           <Tooltip content={<TideTooltip />} />
           <Area type="monotone" dataKey="height" stroke="#0ea5e9" strokeWidth={2} fill="url(#tideGrad)" />
@@ -178,7 +188,7 @@ export function TideChart({ lat, lon }: TideChartProps) {
                   <ArrowDown className="h-3.5 w-3.5 text-orange-400" />
                 )}
                 <span className="font-semibold text-gray-300">{time}</span>
-                <span className="text-gray-500">{e.height.toFixed(2)}m</span>
+                <span className="text-gray-500">{formatHeight(e.height)}</span>
               </div>
             );
           })}
