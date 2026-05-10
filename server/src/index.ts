@@ -16,7 +16,14 @@ import agentRoutes from './routes/agent.js';
 const app = express();
 
 // Global middleware
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: [
+    'https://wavecast-tomeratia.netlify.app',
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 
