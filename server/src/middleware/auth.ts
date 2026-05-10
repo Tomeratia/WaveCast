@@ -9,6 +9,7 @@ const PUBLIC_ROUTES = [
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/refresh',
+  '/health',
 ];
 
 /** Extends Express Request with authenticated user data */
