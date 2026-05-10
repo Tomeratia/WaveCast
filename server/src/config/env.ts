@@ -16,8 +16,8 @@ const envSchema = z.object({
   // Weather APIs
   OPENWEATHER_API_KEY: z.string().min(1).optional(),
 
-  // Google Gemini (AI agent)
-  GEMINI_API_KEY: z.string().min(1).optional(),
+  // Groq (AI agent)
+  API_KEY: z.string().min(1).optional(),
 
   // SendGrid (optional — email features disabled if missing)
   SENDGRID_API_KEY: z.string().min(1).optional(),

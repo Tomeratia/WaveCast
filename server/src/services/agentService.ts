@@ -1,10 +1,12 @@
-import { GoogleGenerativeAI, type FunctionDeclaration, SchemaType } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { env } from '../config/env.js';
-import { spotRepo } from '../repositories/spotRepo.js';
 import { forecastService } from './forecastService.js';
 import { logger } from '../lib/logger.js';
+import type { SpotDTO } from '@wavecast/shared';
 
-const MODEL = 'gemini-2.0-flash';
+// Groq uses OpenAI-compatible API — free, fast, no rate limit issues for dev
+const MODEL = 'llama-3.3-70b-versatile';
+const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 
 const SYSTEM_PROMPT = `You are a friendly surf forecasting assistant for WaveCast, a free surf forecasting app.
 You help surfers understand wave conditions at various spots around the world.
@@ -14,185 +16,157 @@ Score labels: flat (<20), poor (20–39), fair (40–59), good (60–79), epic (
 Keep answers concise, practical, and surf-focused.
 When recommending spots, always mention the score and key conditions (wave height, period, wind).`;
 
-const TOOL_DECLARATIONS: FunctionDeclaration[] = [
+const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   {
-    name: 'search_spots',
-    description:
-      'Returns a list of all known surf spots with their IDs, names, and locations. Use this to discover available spots or to find a spot ID before fetching its forecast.',
-    parameters: {
-      type: SchemaType.OBJECT,
-      properties: {},
+    type: 'function',
+    function: {
+      name: 'search_spots',
+      description: 'Returns a list of all known surf spots with their IDs, names, and locations.',
+      parameters: { type: 'object', properties: {} },
     },
   },
   {
-    name: 'get_forecast',
-    description:
-      'Get the current surf forecast and score for a named surf spot. Returns wave height, period, direction, wind, and an overall score.',
-    parameters: {
-      type: SchemaType.OBJECT,
-      properties: {
-        spot_name: {
-          type: SchemaType.STRING,
-          description:
-            'The name of the surf spot (e.g. "Bali", "Tel Aviv", "Pipeline"). Case-insensitive partial match is supported.',
+    type: 'function',
+    function: {
+      name: 'get_forecast',
+      description: 'Get the current surf forecast and score for a named surf spot.',
+      parameters: {
+        type: 'object',
+        properties: {
+          spot_name: {
+            type: 'string',
+            description: 'The name of the surf spot (e.g. "Bali", "Tel Aviv", "Pipeline"). Case-insensitive partial match.',
+          },
         },
+        required: ['spot_name'],
       },
-      required: ['spot_name'],
     },
   },
   {
-    name: 'get_best_spots',
-    description:
-      'Returns the top N surf spots ranked by current conditions score. Use this when the user asks where to surf or wants recommendations.',
-    parameters: {
-      type: SchemaType.OBJECT,
-      properties: {
-        top_n: {
-          type: SchemaType.NUMBER,
-          description: 'How many spots to return (default 3, max 10)',
+    type: 'function',
+    function: {
+      name: 'get_best_spots',
+      description: 'Returns the top N surf spots ranked by current conditions score.',
+      parameters: {
+        type: 'object',
+        properties: {
+          top_n: { type: 'number', description: 'How many spots to return (default 3, max 5)' },
         },
       },
     },
   },
 ];
 
-interface GetForecastInput {
-  spot_name: string;
-}
+const SPOTS: SpotDTO[] = [
+  { id: 'tel-aviv-hilton',  name: 'Hilton Beach',    lat: 32.0907,  lng: 34.7707,   country: 'Israel',           region: 'Tel Aviv' },
+  { id: 'tel-aviv-maaravi', name: "Ma'aravi Beach",  lat: 32.0745,  lng: 34.7655,   country: 'Israel',           region: 'Tel Aviv' },
+  { id: 'herzliya-dromi',   name: 'Herzliya Dromi',  lat: 32.1560,  lng: 34.7980,   country: 'Israel',           region: 'Sharon' },
+  { id: 'netanya-poleg',    name: 'Netanya Poleg',   lat: 32.3512,  lng: 34.8545,   country: 'Israel',           region: 'Sharon' },
+  { id: 'caesarea',         name: 'Caesarea',        lat: 32.5000,  lng: 34.8980,   country: 'Israel',           region: 'Haifa District' },
+  { id: 'ashdod',           name: 'Ashdod',          lat: 31.7920,  lng: 34.6360,   country: 'Israel',           region: 'Southern District' },
+  { id: 'pipeline',         name: 'Pipeline',        lat: 21.6650,  lng: -158.0530, country: 'USA',              region: 'Hawaii' },
+  { id: 'sunset-beach',     name: 'Sunset Beach',    lat: 21.6780,  lng: -158.0400, country: 'USA',              region: 'Hawaii' },
+  { id: 'mavericks',        name: 'Mavericks',       lat: 37.4920,  lng: -122.5010, country: 'USA',              region: 'California' },
+  { id: 'nazare',           name: 'Nazaré',          lat: 39.6010,  lng: -9.0700,   country: 'Portugal',         region: 'Centro' },
+  { id: 'supertubos',       name: 'Supertubos',      lat: 39.3560,  lng: -9.3600,   country: 'Portugal',         region: 'Centro' },
+  { id: 'biarritz',         name: 'Biarritz',        lat: 43.4830,  lng: -1.5586,   country: 'France',           region: 'Nouvelle-Aquitaine' },
+  { id: 'hossegor',         name: 'Hossegor',        lat: 43.6640,  lng: -1.4350,   country: 'France',           region: 'Nouvelle-Aquitaine' },
+  { id: 'mundaka',          name: 'Mundaka',         lat: 43.4060,  lng: -2.6990,   country: 'Spain',            region: 'Basque Country' },
+  { id: 'jeffreys-bay',     name: "Jeffrey's Bay",  lat: -34.0488, lng: 24.9117,   country: 'South Africa',     region: 'Eastern Cape' },
+  { id: 'snapper-rocks',    name: 'Snapper Rocks',  lat: -28.1680, lng: 153.5490,  country: 'Australia',        region: 'Queensland' },
+  { id: 'uluwatu',          name: 'Uluwatu',        lat: -8.8290,  lng: 115.0850,  country: 'Indonesia',        region: 'Bali' },
+  { id: 'padang-padang',    name: 'Padang Padang',  lat: -8.8120,  lng: 115.0880,  country: 'Indonesia',        region: 'Bali' },
+  { id: 'teahupoo',         name: "Teahupo'o",      lat: -17.8630, lng: -149.2650, country: 'French Polynesia', region: 'Tahiti' },
+  { id: 'bundoran',         name: 'Bundoran',       lat: 54.4770,  lng: -8.2820,   country: 'Ireland',          region: 'Donegal' },
+  { id: 'anchor-point',     name: 'Anchor Point',   lat: 30.5350,  lng: -9.7700,   country: 'Morocco',          region: 'Agadir' },
+  { id: 'punta-de-lobos',   name: 'Punta de Lobos', lat: -34.4200, lng: -72.0060,  country: 'Chile',            region: "O'Higgins" },
+  { id: 'chiba',            name: 'Chiba',          lat: 35.3990,  lng: 140.1790,  country: 'Japan',            region: 'Chiba' },
+];
 
-interface GetBestSpotsInput {
-  top_n?: number;
+const BEST_SPOTS_SAMPLE = ['tel-aviv-hilton', 'pipeline', 'nazare', 'uluwatu', 'hossegor', 'jeffreys-bay', 'snapper-rocks', 'teahupoo'];
+
+function findSpot(query: string): SpotDTO | undefined {
+  const q = query.toLowerCase();
+  return SPOTS.find((s) =>
+    s.name.toLowerCase().includes(q) ||
+    s.region.toLowerCase().includes(q) ||
+    s.country.toLowerCase().includes(q),
+  );
 }
 
 async function toolSearchSpots(): Promise<string> {
-  const spots = await spotRepo.findAll();
-  return JSON.stringify(
-    spots.map((s) => ({ id: s.id, name: s.name, country: s.country, region: s.region })),
-  );
+  return JSON.stringify(SPOTS.map((s) => ({ id: s.id, name: s.name, country: s.country, region: s.region })));
 }
 
-async function toolGetForecast(input: GetForecastInput): Promise<string> {
-  const spots = await spotRepo.findAll();
-  const query = input.spot_name.toLowerCase();
-  const spot = spots.find(
-    (s) =>
-      s.name.toLowerCase().includes(query) ||
-      s.region.toLowerCase().includes(query) ||
-      s.country.toLowerCase().includes(query),
-  );
-
-  if (!spot) {
-    return JSON.stringify({
-      error: `No spot found matching "${input.spot_name}". Try search_spots to see available spots.`,
-    });
-  }
-
+async function toolGetForecast(spotName: string): Promise<string> {
+  const spot = findSpot(spotName);
+  if (!spot) return JSON.stringify({ error: `No spot found matching "${spotName}". Try search_spots.` });
   try {
     const forecast = await forecastService.getSpotForecast(spot.id);
-    return JSON.stringify({
-      spot: { id: spot.id, name: spot.name, country: spot.country, region: spot.region },
-      current: forecast.current,
-    });
+    return JSON.stringify({ spot: { id: spot.id, name: spot.name, country: spot.country, region: spot.region }, current: forecast.current });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return JSON.stringify({ error: `Failed to fetch forecast for ${spot.name}: ${message}` });
+    return JSON.stringify({ error: `Failed to fetch forecast for ${spot.name}: ${err instanceof Error ? err.message : 'Unknown error'}` });
   }
 }
 
-async function toolGetBestSpots(input: GetBestSpotsInput): Promise<string> {
-  const topN = Math.min(input.top_n ?? 3, 10);
-  const spots = await spotRepo.findAll();
-
+async function toolGetBestSpots(topN: number): Promise<string> {
+  const n = Math.min(topN, 5);
+  const sample = SPOTS.filter((s) => BEST_SPOTS_SAMPLE.includes(s.id));
   const results = await Promise.allSettled(
-    spots.map(async (spot) => {
+    sample.map(async (spot) => {
       const forecast = await forecastService.getSpotForecast(spot.id);
       return { spot, score: forecast.current.score.overall, forecast: forecast.current };
     }),
   );
-
   const successful = results
-    .filter(
-      (
-        r,
-      ): r is PromiseFulfilledResult<{
-        spot: (typeof spots)[0];
-        score: number;
-        forecast: unknown;
-      }> => r.status === 'fulfilled',
-    )
+    .filter((r): r is PromiseFulfilledResult<{ spot: SpotDTO; score: number; forecast: unknown }> => r.status === 'fulfilled')
     .map((r) => r.value)
     .sort((a, b) => b.score - a.score)
-    .slice(0, topN);
-
-  return JSON.stringify(
-    successful.map((r) => ({
-      name: r.spot.name,
-      country: r.spot.country,
-      region: r.spot.region,
-      score: r.score,
-      conditions: r.forecast,
-    })),
-  );
+    .slice(0, n);
+  return JSON.stringify(successful.map((r) => ({ name: r.spot.name, country: r.spot.country, region: r.spot.region, score: r.score, conditions: r.forecast })));
 }
 
-async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+async function executeTool(name: string, input: Record<string, unknown>): Promise<string> {
+  logger.debug('Agent executing tool', { tool: name });
   switch (name) {
-    case 'search_spots':
-      return toolSearchSpots();
-    case 'get_forecast':
-      return toolGetForecast(args as GetForecastInput);
-    case 'get_best_spots':
-      return toolGetBestSpots(args as GetBestSpotsInput);
-    default:
-      return JSON.stringify({ error: `Unknown tool: ${name}` });
+    case 'search_spots':   return toolSearchSpots();
+    case 'get_forecast':   return toolGetForecast(input['spot_name'] as string);
+    case 'get_best_spots': return toolGetBestSpots((input['top_n'] as number) ?? 3);
+    default:               return JSON.stringify({ error: `Unknown tool: ${name}` });
   }
 }
 
 async function chat(message: string): Promise<string> {
-  if (!env.GEMINI_API_KEY) {
-    return 'AI assistant is not configured. Please set GEMINI_API_KEY to enable this feature.';
+  if (!env.API_KEY) {
+    return 'AI assistant is not configured. Please set API_KEY to enable this feature.';
   }
 
-  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    systemInstruction: SYSTEM_PROMPT,
-    tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
-  });
+  const client = new OpenAI({ apiKey: env.API_KEY, baseURL: GROQ_BASE_URL });
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'user', content: message },
+  ];
 
-  const chatSession = model.startChat();
-
-  // Send the initial user message
-  let response = await chatSession.sendMessage(message);
-
-  // Tool use loop — Gemini may request multiple rounds of function calls
   for (let iteration = 0; iteration < 10; iteration++) {
-    const candidate = response.response.candidates?.[0];
-    if (!candidate) break;
+    const response = await client.chat.completions.create({ model: MODEL, tools: TOOLS, messages });
+    const choice = response.choices[0];
+    if (!choice) break;
 
-    const functionCalls = response.response.functionCalls();
-
-    if (!functionCalls || functionCalls.length === 0) {
-      // No tool calls — extract and return text
-      return response.response.text();
+    if (choice.finish_reason === 'stop') {
+      return choice.message.content ?? 'I could not generate a response.';
     }
 
-    // Execute all requested tools and collect results
-    const functionResults = await Promise.all(
-      functionCalls.map(async (call) => {
-        logger.debug('Agent executing tool', { tool: call.name, args: call.args });
-        const result = await executeTool(call.name, call.args as Record<string, unknown>);
-        return {
-          functionResponse: {
-            name: call.name,
-            response: { result },
-          },
-        };
-      }),
-    );
+    if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
+      messages.push(choice.message);
+      for (const call of choice.message.tool_calls) {
+        const args = JSON.parse(call.function.arguments || '{}') as Record<string, unknown>;
+        const result = await executeTool(call.function.name, args);
+        messages.push({ role: 'tool', tool_call_id: call.id, content: result });
+      }
+      continue;
+    }
 
-    // Send tool results back to Gemini and continue the loop
-    response = await chatSession.sendMessage(functionResults);
+    break;
   }
 
   return 'I was unable to complete the request.';
