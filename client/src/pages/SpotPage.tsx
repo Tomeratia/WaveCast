@@ -154,15 +154,13 @@ function HourlyTable({ day }: { day: DayGroup }) {
   const [expanded, setExpanded] = useState(false);
 
   const summarySlots = useMemo(() => {
+    return [day.morning, day.noon, day.evening].filter(Boolean) as ForecastSlot[];
+  }, [day.morning, day.noon, day.evening]);
+
+  const expandedSlots = useMemo(() => {
     return SUMMARY_HOURS
       .map((h) => day.slots.find((s) => new Date(s.forecast.timestamp).getUTCHours() === h))
       .filter(Boolean) as ForecastSlot[];
-  }, [day.slots]);
-
-  const expandedSlots = useMemo(() => {
-    return [...day.slots].sort(
-      (a, b) => new Date(a.forecast.timestamp).getTime() - new Date(b.forecast.timestamp).getTime()
-    );
   }, [day.slots]);
 
   const slots = expanded ? expandedSlots : summarySlots;
