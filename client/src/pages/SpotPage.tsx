@@ -337,24 +337,21 @@ if (!spot) {
       {/* Header */}
       <div className="bg-app-surface border-b border-app-border">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-4">
-              <Link to="/" className="text-gray-500 hover:text-white transition-colors">
+          <div className="flex items-center justify-between py-4 gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link to="/" className="text-gray-500 hover:text-white transition-colors flex-shrink-0">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
-              <div>
-                <h1 className="text-xl font-bold text-white">{spot.name}</h1>
-                <p className="text-sm text-gray-500">{spot.region}, {spot.country}</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-white truncate">{spot.name}</h1>
+                <p className="text-xs sm:text-sm text-gray-500 truncate">{spot.region}, {spot.country}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {current && (
-                <>
-                  <Stars score={sc} />
-                  <span className={`rounded-lg px-3 py-1 text-sm font-bold text-white ${scoreBg(sc)}`}>
-                    {scoreLabel(sc)}
-                  </span>
-                </>
+                <span className={`rounded-lg px-2.5 py-1 text-xs sm:text-sm font-bold text-white ${scoreBg(sc)}`}>
+                  {scoreLabel(sc)}
+                </span>
               )}
               {accessToken && (
                 <button

@@ -110,7 +110,7 @@ export function BestWindow({ slots }: BestWindowProps) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+      <div className="mt-4 grid grid-cols-3 sm:grid-cols-3 gap-3 text-center">
         <div className="rounded-lg bg-app-surface/60 px-2 py-2">
           <div className="text-[9px] font-semibold uppercase tracking-wider text-gray-500">Waves</div>
           <div className="mt-1 text-sm font-bold text-white">{formatHeight(f.swellHeight)}</div>
