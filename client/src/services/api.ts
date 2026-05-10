@@ -7,6 +7,22 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+// Module-level access token getter — set by AuthContext on login.
+// We do this here (instead of a React hook) so all axios callers get auth automatically.
+let getAccessToken: () => string | null = () => null;
+export function setAccessTokenGetter(fn: () => string | null) {
+  getAccessToken = fn;
+}
+
+// Attach Authorization header automatically when a token is available.
+api.interceptors.request.use((config) => {
+  const token = getAccessToken();
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Keep-alive ping every 9 minutes to prevent Render cold starts
 setInterval(() => { api.get('/health').catch(() => {}); }, 9 * 60 * 1000);
 

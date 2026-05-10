@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { UserDTO } from '@shared/types';
+import { setAccessTokenGetter } from '../services/api';
 
 interface AuthState {
   user: UserDTO | null;
@@ -16,6 +17,11 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, accessToken: null });
+
+  // Expose current token to axios via module-level getter
+  useEffect(() => {
+    setAccessTokenGetter(() => state.accessToken);
+  }, [state.accessToken]);
 
   const login = useCallback((user: UserDTO, token: string) => {
     setState({ user, accessToken: token });
