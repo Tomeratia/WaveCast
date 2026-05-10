@@ -1,6 +1,6 @@
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, Thermometer, Gauge, Heart } from 'lucide-react';
+import { ArrowLeft, Thermometer, Gauge, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import { Spinner } from '../components/ui/Spinner';
 import { useSpotForecast } from '../hooks/useSpotForecast';
 import { DEMO_SPOTS } from '../data/spots';
@@ -147,11 +147,28 @@ function DayCard({ day, isToday }: { day: DayGroup; isToday: boolean }) {
 
 // ── Hourly details table ──────────────────────────────────────────────────────
 
+const SUMMARY_HOURS = [6, 9, 12, 15, 18, 21, 0];
+
 function HourlyTable({ day }: { day: DayGroup }) {
   const { formatHeight, formatSpeed } = useUnits();
-  const slots = [day.morning, day.noon, day.evening].filter(Boolean) as ForecastSlot[];
+  const [expanded, setExpanded] = useState(false);
+
+  const summarySlots = useMemo(() => {
+    return SUMMARY_HOURS
+      .map((h) => day.slots.find((s) => new Date(s.forecast.timestamp).getUTCHours() === h))
+      .filter(Boolean) as ForecastSlot[];
+  }, [day.slots]);
+
+  const expandedSlots = useMemo(() => {
+    return [...day.slots].sort(
+      (a, b) => new Date(a.forecast.timestamp).getTime() - new Date(b.forecast.timestamp).getTime()
+    );
+  }, [day.slots]);
+
+  const slots = expanded ? expandedSlots : summarySlots;
 
   return (
+    <>
     <div className="overflow-x-auto">
       <table className="w-full text-sm min-w-[580px]">
         <thead>
@@ -247,6 +264,17 @@ function HourlyTable({ day }: { day: DayGroup }) {
         </tbody>
       </table>
     </div>
+    <button
+      onClick={() => setExpanded((e) => !e)}
+      className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 hover:text-ocean-400 hover:bg-app-muted/30 transition-colors border-t border-app-border"
+    >
+      {expanded ? (
+        <><ChevronUp className="h-3.5 w-3.5" /> Show less</>
+      ) : (
+        <><ChevronDown className="h-3.5 w-3.5" /> Show all hours</>
+      )}
+    </button>
+    </>
   );
 }
 
