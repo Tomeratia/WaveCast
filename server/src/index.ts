@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import forecastRoutes from './routes/forecast.js';
 import favoritesRoutes from './routes/favorites.js';
 import alertsRoutes from './routes/alerts.js';
+import agentRoutes from './routes/agent.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/forecast', forecastRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/alerts', alertsRoutes);
+app.use('/api/agent', agentRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Waves, Heart, Bell } from 'lucide-react';
+import { Waves, Heart, Bell, Bot } from 'lucide-react';
 import { useUnits } from '../../context/UnitsContext';
 import type { HeightUnit, SpeedUnit } from '../../context/UnitsContext';
 
@@ -72,6 +72,10 @@ export function Navbar() {
           <Link to="/alerts" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Alerts</span>
+          </Link>
+          <Link to="/agent" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-white transition-colors">
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Assistant</span>
           </Link>
         </div>
       </div>

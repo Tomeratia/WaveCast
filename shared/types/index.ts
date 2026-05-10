@@ -15,3 +15,5 @@ export type {
 } from './auth';
 
 export type { ApiResponse } from './api';
+
+export type { ChatMessage, AgentChatRequest, AgentChatReply } from './agent';
