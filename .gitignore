@@ -32,3 +32,5 @@ coverage/
 
 # Local Netlify folder
 .netlify
+CLAUDE.md
+INSTALLED_PACKAGES.md
