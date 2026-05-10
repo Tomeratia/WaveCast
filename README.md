@@ -3,7 +3,7 @@
 A free, open-source surf forecasting web application — a transparent alternative to Surfline.  
 Real-time wave forecasts, surf spot ratings, personalized alerts, and tide charts with no paywall.
 
-**Live demo:** [wavecast.netlify.app](https://wavecast.netlify.app)
+**Live demo:** [wavecast-tomeratia.netlify.app](https://wavecast-tomeratia.netlify.app)
 
 ---
 
