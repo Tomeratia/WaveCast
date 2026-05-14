@@ -16,8 +16,7 @@
     "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=client",
     "prisma:validate": "npx prisma validate",
     "prisma:generate": "npx prisma generate",
-    "prisma:migrate": "npx prisma migrate dev",
-    "postinstall": "npx prisma generate"
+    "prisma:migrate": "npx prisma migrate dev"
   },
   "engines": {
     "node": ">=18.0.0"
