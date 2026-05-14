@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
-    "@sendgrid/mail": "^8.1.0",
     "@supabase/supabase-js": "^2.45.0",
     "@types/nodemailer": "^8.0.0",
     "@wavecast/shared": "*",
