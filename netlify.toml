@@ -5,7 +5,7 @@
 
 [build.environment]
   NODE_VERSION    = "20"
-  VITE_API_URL    = "https://wavecast-server.onrender.com"
+  VITE_API_URL    = "https://wavecast-server-production.up.railway.app"
 
 # SPA fallback — every unknown path serves index.html so React Router handles it
 [[redirects]]
