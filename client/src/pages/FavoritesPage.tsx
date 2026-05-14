@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Trash2, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getFavorites, removeFavorite } from '../services/favoritesClient';
-import type { SpotDTO } from '@shared/types';
+import { DEMO_SPOTS } from '../data/spots';
+import type { SpotWithCams } from '../data/spots';
 
 export function FavoritesPage() {
   const { user, accessToken } = useAuth();
   const navigate = useNavigate();
-  const [spots, setSpots] = useState<SpotDTO[]>([]);
+  const [spots, setSpots] = useState<SpotWithCams[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -16,7 +17,12 @@ export function FavoritesPage() {
   useEffect(() => {
     if (!accessToken) { setLoading(false); return; }
     getFavorites(accessToken)
-      .then(setSpots)
+      .then((ids) => {
+        const enriched = ids
+          .map((id) => DEMO_SPOTS.find((s) => s.id === id))
+          .filter((s): s is SpotWithCams => !!s);
+        setSpots(enriched);
+      })
       .catch(() => setError('Failed to load favourites'))
       .finally(() => setLoading(false));
   }, [accessToken]);

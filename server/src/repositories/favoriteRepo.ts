@@ -1,20 +1,13 @@
 import { prisma } from '../lib/prisma.js';
-import { SPOTS } from '../../../shared/data/spots.js';
-import type { SpotDTO } from '@wavecast/shared';
-
-function spotById(id: string): SpotDTO | undefined {
-  return SPOTS.find((s) => s.id === id);
-}
 
 export const favoriteRepo = {
-  async findByUser(userId: string): Promise<SpotDTO[]> {
+  async findByUser(userId: string): Promise<string[]> {
     const favorites = await prisma.favorite.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      select: { spotId: true },
     });
-    return favorites
-      .map((f) => spotById(f.spotId))
-      .filter((s): s is SpotDTO => s !== undefined);
+    return favorites.map((f) => f.spotId);
   },
 
   async add(userId: string, spotId: string): Promise<void> {

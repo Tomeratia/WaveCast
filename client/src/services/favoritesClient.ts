@@ -1,8 +1,8 @@
 import { api } from './api';
-import type { ApiResponse, SpotDTO } from '@shared/types';
+import type { ApiResponse } from '@shared/types';
 
-export async function getFavorites(token: string): Promise<SpotDTO[]> {
-  const res = await api.get<ApiResponse<SpotDTO[]>>('/api/favorites', {
+export async function getFavorites(token: string): Promise<string[]> {
+  const res = await api.get<ApiResponse<string[]>>('/api/favorites', {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data.data ?? [];

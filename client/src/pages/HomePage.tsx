@@ -10,7 +10,7 @@ import { getFavorites } from '../services/favoritesClient';
 import { useAuth } from '../context/AuthContext';
 import { useUnits } from '../context/UnitsContext';
 import type { SpotWithCams } from '../data/spots';
-import type { ScoreResult, NormalizedForecast, SpotDTO } from '@shared/types';
+import type { ScoreResult, NormalizedForecast } from '@shared/types';
 
 // ── Types & helpers ───────────────────────────────────────────────────────────
 
@@ -394,17 +394,17 @@ function ContinentSection({
 
 function MyFavourites({ liveData }: { liveData: Record<string, LiveData> }) {
   const { accessToken } = useAuth();
-  const [favSpots, setFavSpots] = useState<SpotDTO[]>([]);
+  const [favIds, setFavIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!accessToken) return;
-    getFavorites(accessToken).then(setFavSpots).catch(() => {});
+    getFavorites(accessToken).then(setFavIds).catch(() => {});
   }, [accessToken]);
 
-  if (!accessToken || favSpots.length === 0) return null;
+  if (!accessToken || favIds.length === 0) return null;
 
-  const enriched = favSpots
-    .map((fav) => DEMO_SPOTS.find((s) => s.id === fav.id))
+  const enriched = favIds
+    .map((id) => DEMO_SPOTS.find((s) => s.id === id))
     .filter((s): s is SpotWithCams => !!s);
 
   if (enriched.length === 0) return null;
