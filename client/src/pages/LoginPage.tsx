@@ -11,6 +11,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -30,6 +31,8 @@ export function LoginPage() {
         (err as { response?: { data?: { error?: { message?: string } } } })
           ?.response?.data?.error?.message ?? 'Something went wrong. Try again.';
       setError(msg);
+      setShake(true);
+      setTimeout(() => setShake(false), 600);
     } finally {
       setLoading(false);
     }
@@ -50,10 +53,11 @@ export function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-700 bg-gray-900 p-8 shadow-xl">
+        <div className={`rounded-xl border bg-gray-900 p-8 shadow-xl transition-colors ${error ? 'border-red-700' : 'border-gray-700'} ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
           {error && (
-            <div className="mb-4 rounded-lg bg-red-900/40 px-4 py-3 text-sm text-red-300 border border-red-700">
-              {error}
+            <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-900/40 px-4 py-3 text-sm text-red-300 border border-red-700">
+              <span className="mt-0.5 text-red-400">✕</span>
+              <span>{error}</span>
             </div>
           )}
 
@@ -78,9 +82,9 @@ export function LoginPage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(null); }}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2.5 text-white placeholder-gray-500 focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
+                className={`w-full rounded-lg border bg-gray-800 px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-1 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-700 focus:border-ocean-500 focus:ring-ocean-500'}`}
               />
             </div>
 
@@ -90,9 +94,9 @@ export function LoginPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setError(null); }}
                 placeholder={mode === 'register' ? 'At least 8 characters' : '••••••••'}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2.5 text-white placeholder-gray-500 focus:border-ocean-500 focus:outline-none focus:ring-1 focus:ring-ocean-500"
+                className={`w-full rounded-lg border bg-gray-800 px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-1 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-700 focus:border-ocean-500 focus:ring-ocean-500'}`}
               />
             </div>
 

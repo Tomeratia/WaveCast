@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
-import { Bot, Send } from 'lucide-react';
+import { Bot, Send, LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { sendAgentMessage } from '../services/agentClient';
+import { useAuth } from '../context/AuthContext';
 import type { ChatMessage } from '@wavecast/shared';
 
 const INITIAL_MESSAGE: ChatMessage = {
@@ -28,10 +30,10 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         </div>
       )}
       <div
-        className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+        className={`max-w-[75%] rounded-2xl px-4 py-3 text-base leading-relaxed whitespace-pre-wrap ${
           isUser
             ? 'rounded-br-sm bg-ocean-500 text-white'
-            : 'rounded-bl-sm bg-app-card text-gray-200'
+            : 'rounded-bl-sm bg-app-card text-white'
         }`}
       >
         {msg.content}
@@ -41,6 +43,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
 }
 
 export function AgentPage() {
+  const { accessToken } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +80,23 @@ export function AgentPage() {
       e.preventDefault();
       void handleSubmit();
     }
+  }
+
+  if (!accessToken) {
+    return (
+      <div className="mx-auto flex h-[calc(100vh-52px)] max-w-3xl flex-col items-center justify-center gap-4 px-4">
+        <Bot className="h-12 w-12 text-ocean-400" />
+        <h1 className="text-xl font-bold text-white">AI Surf Assistant</h1>
+        <p className="text-center text-gray-400">You need to be logged in to chat with the surf assistant.</p>
+        <Link
+          to="/login"
+          className="flex items-center gap-2 rounded-xl bg-ocean-500 px-6 py-3 text-sm font-medium text-white hover:bg-ocean-600 transition-colors"
+        >
+          <LogIn className="h-4 w-4" />
+          Log in to continue
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -119,7 +139,7 @@ export function AgentPage() {
           placeholder="Ask about surf conditions... (Enter to send, Shift+Enter for newline)"
           rows={2}
           disabled={isLoading}
-          className="flex-1 resize-none rounded-xl border border-app-border bg-app-card px-4 py-3 text-sm text-gray-200 placeholder-gray-500 focus:border-ocean-500 focus:outline-none disabled:opacity-50"
+          className="flex-1 resize-none rounded-xl border border-app-border bg-app-card px-4 py-3 text-base text-white placeholder-gray-400 focus:border-ocean-500 focus:outline-none disabled:opacity-50 [color-scheme:dark]"
         />
         <button
           type="submit"

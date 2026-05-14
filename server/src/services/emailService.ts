@@ -1,19 +1,25 @@
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 
-let initialized = false;
+let transporter: nodemailer.Transporter | null = null;
 
 function ensureInit(): boolean {
-  if (initialized) return true;
+  if (transporter) return true;
 
-  if (!env.SENDGRID_API_KEY || !env.ALERT_FROM_EMAIL) {
-    logger.warn('SendGrid not configured — email features disabled');
+  if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
+    logger.warn('Gmail not configured — email features disabled');
     return false;
   }
 
-  sgMail.setApiKey(env.SENDGRID_API_KEY);
-  initialized = true;
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: env.GMAIL_USER,
+      pass: env.GMAIL_APP_PASSWORD,
+    },
+  });
+
   return true;
 }
 
@@ -28,9 +34,9 @@ export const emailService = {
     if (!ensureInit()) return false;
 
     try {
-      await sgMail.send({
+      await transporter!.sendMail({
+        from: `"WaveCast" <${env.GMAIL_USER}>`,
         to: params.to,
-        from: env.ALERT_FROM_EMAIL!,
         subject: `WaveCast Alert: ${params.spotName} — Score ${params.score}/100`,
         html: buildAlertHtml(params),
       });

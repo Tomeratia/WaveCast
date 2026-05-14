@@ -19,9 +19,9 @@ const envSchema = z.object({
   // Groq (AI agent)
   API_KEY: z.string().min(1).optional(),
 
-  // SendGrid (optional — email features disabled if missing)
-  SENDGRID_API_KEY: z.string().min(1).optional(),
-  ALERT_FROM_EMAIL: z.string().email().optional(),
+  // Gmail SMTP (optional — email features disabled if missing)
+  GMAIL_USER: z.string().email().optional(),
+  GMAIL_APP_PASSWORD: z.string().min(1).optional(),
 
   // Server
   PORT: z.coerce.number().default(3001),

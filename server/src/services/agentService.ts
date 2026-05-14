@@ -14,7 +14,8 @@ Always use the provided tools to fetch live data before answering questions abou
 Respond in the same language the user writes in.
 Score labels: flat (<20), poor (20–39), fair (40–59), good (60–79), epic (80+).
 Keep answers concise, practical, and surf-focused.
-When recommending spots, always mention the score and key conditions (wave height, period, wind).`;
+When recommending spots, always mention the score and key conditions (wave height, period, wind).
+IMPORTANT: When calling tools, always use valid JSON for arguments. Never use any other format.`;
 
 const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   {
@@ -148,7 +149,17 @@ async function chat(message: string): Promise<string> {
   ];
 
   for (let iteration = 0; iteration < 10; iteration++) {
-    const response = await client.chat.completions.create({ model: MODEL, tools: TOOLS, messages });
+    let response: Awaited<ReturnType<typeof client.chat.completions.create>>;
+    try {
+      response = await client.chat.completions.create({ model: MODEL, tools: TOOLS, messages });
+    } catch (err: unknown) {
+      // Groq throws when the model generates malformed tool calls (non-JSON format).
+      // Retry once without tools so the model can still answer in plain text.
+      logger.warn('Agent tool call failed, retrying without tools', { err });
+      const fallback = await client.chat.completions.create({ model: MODEL, messages });
+      return fallback.choices[0]?.message.content ?? 'I was unable to complete the request.';
+    }
+
     const choice = response.choices[0];
     if (!choice) break;
 

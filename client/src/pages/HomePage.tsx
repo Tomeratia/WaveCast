@@ -1,14 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { Waves, MapPin, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
+import { Waves, MapPin, ChevronDown, ChevronRight, Search, X, Heart } from 'lucide-react';
 import { SpotMap } from '../components/map/SpotMap';
 import { Spinner } from '../components/ui/Spinner';
 import { DEMO_SPOTS } from '../data/spots';
 import { fetchForecast } from '../services/weatherClient';
 import { calculateScore } from '../services/scoringClient';
+import { getFavorites } from '../services/favoritesClient';
+import { useAuth } from '../context/AuthContext';
 import { useUnits } from '../context/UnitsContext';
 import type { SpotWithCams } from '../data/spots';
-import type { ScoreResult, NormalizedForecast } from '@shared/types';
+import type { ScoreResult, NormalizedForecast, SpotDTO } from '@shared/types';
 
 // ── Types & helpers ───────────────────────────────────────────────────────────
 
@@ -388,6 +390,42 @@ function ContinentSection({
   );
 }
 
+// ── My Favourites section ─────────────────────────────────────────────────────
+
+function MyFavourites({ liveData }: { liveData: Record<string, LiveData> }) {
+  const { accessToken } = useAuth();
+  const [favSpots, setFavSpots] = useState<SpotDTO[]>([]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getFavorites(accessToken).then(setFavSpots).catch(() => {});
+  }, [accessToken]);
+
+  if (!accessToken || favSpots.length === 0) return null;
+
+  const enriched = favSpots
+    .map((fav) => DEMO_SPOTS.find((s) => s.id === fav.id))
+    .filter((s): s is SpotWithCams => !!s);
+
+  if (enriched.length === 0) return null;
+
+  return (
+    <section>
+      <div className="flex items-center gap-2 mb-3">
+        <Heart className="h-4 w-4 text-red-400 fill-red-400" />
+        <h2 className="text-base font-bold text-white">My Favourites</h2>
+        <div className="flex-1 h-px bg-app-border ml-1" />
+        <Link to="/favorites" className="text-xs text-ocean-400 hover:underline">View all</Link>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {enriched.map((spot) => (
+          <SpotCard key={spot.id} spot={spot} ld={liveData[spot.id] ?? { score: null, forecast: null, loading: true }} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ── HomePage ──────────────────────────────────────────────────────────────────
 
 export function HomePage() {
@@ -410,6 +448,9 @@ export function HomePage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 space-y-10">
+        {/* My Favourites */}
+        <MyFavourites liveData={liveData} />
+
         {/* Map */}
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
