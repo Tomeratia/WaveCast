@@ -346,7 +346,7 @@ export function SpotPage() {
   useEffect(() => {
     if (!accessToken || !spotId) return;
     getFavorites(accessToken).then((favs) => {
-      setIsFav(favs.some((f) => f.id === spotId));
+      setIsFav(favs.includes(spotId));
     }).catch(() => {});
   }, [accessToken, spotId]);
 
