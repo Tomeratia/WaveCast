@@ -17,7 +17,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm install --prefix server vitest @vitest/coverage-v8
+      - run: npm install vitest @vitest/coverage-v8 supertest @types/supertest dotenv-cli
+        working-directory: server
       - run: npx vitest run src/tests/unit
         working-directory: server
         env:
@@ -39,6 +40,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm install --prefix client vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+      - run: npm install vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+        working-directory: client
       - run: npx vitest run
         working-directory: client
