@@ -8,7 +8,10 @@
     "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "prisma generate && tsc",
     "start": "prisma generate && tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "dotenv -e src/tests/.env.test -- vitest run",
+    "test:watch": "dotenv -e src/tests/.env.test -- vitest",
+    "test:coverage": "dotenv -e src/tests/.env.test -- vitest run --coverage"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
@@ -38,7 +41,12 @@
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.0",
     "dotenv": "^16.0.0",
+    "dotenv-cli": "^7.0.0",
     "prisma": "^6.0.0",
-    "typescript": "^5.4.0"
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0",
+    "@vitest/coverage-v8": "^2.0.0"
   }
 }

@@ -34,3 +34,4 @@ coverage/
 .netlify
 CLAUDE.md
 INSTALLED_PACKAGES.md
+handoff.md

@@ -29,8 +29,9 @@ Real-time wave forecasts, surf spot ratings, personalized alerts, and tide chart
 | Database | PostgreSQL (Supabase), Prisma ORM |
 | Auth | JWT (access token in memory + refresh token in httpOnly cookie) |
 | Weather data | Open-Meteo Marine API (primary), OpenWeatherMap (fallback) |
-| Email | SendGrid |
-| Deployment | Netlify (client) + Render (server) |
+| Email | Nodemailer (Gmail SMTP) |
+| Testing | Vitest, Supertest, React Testing Library, jsdom |
+| Deployment | Netlify (client) + Railway (server) |
 
 ---
 
@@ -152,6 +153,29 @@ All protected routes require `Authorization: Bearer <token>`.
 | [OpenWeatherMap](https://openweathermap.org/api) | Wind, air temperature, pressure (fallback) | 60/min (free tier) |
 
 All data is cached in PostgreSQL for 3 hours to minimize API calls.
+
+---
+
+## Testing
+
+| Package | Used in | Purpose |
+|---|---|---|
+| `vitest` | server + client | Test runner (TypeScript-native, Vite-compatible) |
+| `@vitest/coverage-v8` | server + client | Code coverage reports |
+| `supertest` + `@types/supertest` | server | HTTP integration tests against Express app |
+| `dotenv-cli` | server | Load `src/tests/.env.test` for test runs |
+| `@testing-library/react` | client | Component rendering + querying |
+| `@testing-library/jest-dom` | client | DOM matchers (`toBeInTheDocument`, etc.) |
+| `@testing-library/user-event` | client | User interaction simulation |
+| `jsdom` | client | Browser DOM environment for Vitest |
+
+```bash
+# Server — unit + integration tests (requires wavecast_test PostgreSQL DB)
+cd server && npm test
+
+# Client — component unit tests
+cd client && npm test
+```
 
 ---
 
