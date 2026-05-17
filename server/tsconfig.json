@@ -10,6 +10,7 @@
     }
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["src/tests/**"],
   "references": [
     { "path": "../shared" }
   ]

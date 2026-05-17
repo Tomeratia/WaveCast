@@ -20,13 +20,19 @@ const spot: SpotDTO = {
 };
 
 const mockForecast = {
-  time: new Date().toISOString(),
+  timestamp: new Date().toISOString(),
   swellHeight: 2.0,
   swellPeriod: 12,
   swellDirection: 270,
+  swellHeight2: 0,
+  swellPeriod2: 0,
+  swellDirection2: 0,
   windSpeed: 5,
   windDirection: 90,
-  waterTemp: 24,
+  windGusts: 8,
+  temperature: 22,
+  seaTemperature: 20,
+  pressure: 1013,
 };
 
 beforeEach(() => {

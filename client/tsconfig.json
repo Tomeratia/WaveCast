@@ -10,5 +10,6 @@
     },
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "../shared/types/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "../shared/types/**/*.ts"],
+  "exclude": ["src/tests/**"]
 }
