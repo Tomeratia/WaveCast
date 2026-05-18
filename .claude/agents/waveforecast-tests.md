@@ -20,14 +20,14 @@ WaveForecast uses **Vitest** for all testing (not Jest). Tests exist in two loca
   - `unit/ScoreBadge.test.tsx` — component rendering
   - `unit/AuthContext.test.tsx` — context behavior
   - `unit/SpotCard.test.tsx` — component with props
-- **Run**: `cd client && npx vitest run`
+- **Run**: `cd client && npm test`
 
 ### Server Tests (`server/src/tests/`)
 - **Framework**: Vitest + Supertest
 - **Config**: `server/vitest.config.ts`
 - **Setup**: `server/src/tests/setup.ts`, `server/src/tests/helpers.ts`
-- **Test env**: `server/src/tests/.env.test`
-- **Run**: `cd server && npx vitest run`
+- **Test env**: `server/src/tests/.env.test` (loaded automatically via the npm test script)
+- **Run**: `cd server && npm test`
 
 ## Testing Conventions
 
@@ -70,6 +70,22 @@ describe('GET /api/forecast/:spotId', () => {
   })
 })
 ```
+
+## Running Tests
+
+Always run tests using the npm scripts (they handle env vars and config automatically):
+
+```bash
+cd server && npm test   # runs: npx dotenv -e src/tests/.env.test -- npx vitest run
+cd client && npm test   # runs: vitest run
+```
+
+Run **both** when:
+- The user explicitly asks to run tests
+- After writing or modifying tests
+- When debugging a failing test suite
+
+Run only the relevant one when the change is isolated to client or server only.
 
 ## Your Approach
 
