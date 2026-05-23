@@ -28,14 +28,14 @@ export const emailService = {
 
     try {
       const { error } = await resend!.emails.send({
-        from: 'WaveCast <onboarding@resend.dev>',
+        from: 'onboarding@resend.dev',
         to: params.to,
         subject: `WaveCast Alert: ${params.spotName} — Score ${params.score}/100`,
         html: buildAlertHtml(params),
       });
 
       if (error) {
-        logger.error('Failed to send alert email', { error: error.message });
+        logger.error('Failed to send alert email', { error: error.message, name: error.name });
         return false;
       }
 
