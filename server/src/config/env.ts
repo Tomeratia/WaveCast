@@ -19,14 +19,7 @@ const envSchema = z.object({
   // Groq (AI agent)
   API_KEY: z.string().min(1).optional(),
 
-  // Gmail SMTP (optional — email features disabled if missing)
-  GMAIL_USER: z.string().email().optional(),
-  GMAIL_APP_PASSWORD: z.string().min(1).optional(),
-
-  // Resend (optional — takes priority over Gmail if set)
-  RESEND_API_KEY: z.string().min(1).optional(),
-
-  // Brevo API (optional)
+  // Brevo API (optional — email features disabled if missing)
   BREVO_API_KEY: z.string().optional(),
   BREVO_FROM_EMAIL: z.string().email().optional(),
 

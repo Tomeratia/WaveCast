@@ -16,7 +16,6 @@
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "@supabase/supabase-js": "^2.45.0",
-    "@types/nodemailer": "^8.0.0",
     "@wavecast/shared": "*",
     "axios": "^1.7.0",
     "bcrypt": "^5.1.0",
@@ -27,9 +26,7 @@
     "express-async-errors": "^3.1.1",
     "jsonwebtoken": "^9.0.0",
     "node-cron": "^3.0.0",
-    "nodemailer": "^8.0.7",
     "openai": "^4.77.0",
-    "resend": "^6.12.3",
     "tsx": "^4.19.0",
     "zod": "^3.23.0"
   },
