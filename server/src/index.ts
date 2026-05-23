@@ -34,6 +34,45 @@ app.use(verifyToken);
 // Health check — used by keep-alive ping to prevent Render cold starts
 app.get('/health', (_req, res) => { res.json({ ok: true }); });
 
+// Temporary diagnostic endpoint
+app.get('/health/diagnose', async (_req, res) => {
+  const diagnostics: Record<string, unknown> = {
+    hasResendKey: !!env.RESEND_API_KEY,
+    resendKeyPrefix: env.RESEND_API_KEY?.slice(0, 8) ?? null,
+  };
+
+  try {
+    const { alertRepo } = await import('./repositories/alertRepo.js');
+    const alerts = await alertRepo.findAllActive();
+    diagnostics['alertCount'] = alerts.length;
+    diagnostics['alerts'] = alerts.map((a) => ({
+      id: a.id,
+      spotId: a.spotId,
+      minScore: a.minScore,
+      lastSentAt: a.lastSentAt,
+      userEmail: a.user.email,
+    }));
+  } catch (err) {
+    diagnostics['alertsError'] = err instanceof Error ? err.message : String(err);
+  }
+
+  try {
+    const { Resend } = await import('resend');
+    const resend = new Resend(env.RESEND_API_KEY);
+    const result = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: 'tomeratia44@gmail.com',
+      subject: 'WaveCast Diagnostic',
+      html: '<p>Diagnostic test from /health/diagnose</p>',
+    });
+    diagnostics['resendResult'] = result;
+  } catch (err) {
+    diagnostics['resendException'] = err instanceof Error ? err.message : String(err);
+  }
+
+  res.json(diagnostics);
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/forecast', forecastRoutes);
