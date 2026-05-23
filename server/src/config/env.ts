@@ -26,6 +26,10 @@ const envSchema = z.object({
   // Resend (optional — takes priority over Gmail if set)
   RESEND_API_KEY: z.string().min(1).optional(),
 
+  // Brevo API (optional)
+  BREVO_API_KEY: z.string().optional(),
+  BREVO_FROM_EMAIL: z.string().email().optional(),
+
   // Server
   PORT: z.coerce.number().default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

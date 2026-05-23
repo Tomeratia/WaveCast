@@ -1,19 +1,11 @@
-import { Resend } from 'resend';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 
-let resend: Resend | null = null;
-
-function ensureInit(): boolean {
-  if (resend) return true;
-
-  if (!env.RESEND_API_KEY) {
-    logger.error('RESEND_API_KEY is missing — email features disabled');
+function isConfigured(): boolean {
+  if (!env.BREVO_API_KEY || !env.BREVO_FROM_EMAIL) {
+    logger.warn('Brevo not configured — email features disabled');
     return false;
   }
-  logger.info('Resend initialized with key', { keyPrefix: env.RESEND_API_KEY.slice(0, 8) });
-
-  resend = new Resend(env.RESEND_API_KEY);
   return true;
 }
 
@@ -25,28 +17,35 @@ export const emailService = {
     summary: string;
     unsubscribeUrl: string;
   }): Promise<boolean> {
-    if (!ensureInit()) return false;
+    if (!isConfigured()) return false;
 
     try {
-      const { error } = await resend!.emails.send({
-        from: 'onboarding@resend.dev',
-        to: params.to,
-        subject: `WaveCast Alert: ${params.spotName} — Score ${params.score}/100`,
-        html: buildAlertHtml(params),
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': env.BREVO_API_KEY!,
+          'content-type': 'application/json',
+          'accept': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'WaveCast', email: env.BREVO_FROM_EMAIL },
+          to: [{ email: params.to }],
+          subject: `WaveCast Alert: ${params.spotName} — Score ${params.score}/100`,
+          htmlContent: buildAlertHtml(params),
+        }),
       });
 
-      if (error) {
-        logger.error('Failed to send alert email', { error: error.message, name: error.name, full: JSON.stringify(error) });
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('Failed to send alert email', { status: response.status, body: errorText });
         return false;
       }
 
       logger.info('Alert email sent', { to: params.to, spot: params.spotName });
-      logger.info('Resend success');
       return true;
     } catch (err) {
-      logger.error('Failed to send alert email EXCEPTION', {
+      logger.error('Failed to send alert email', {
         error: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
       });
       return false;
     }
