@@ -35,15 +35,17 @@ export const emailService = {
       });
 
       if (error) {
-        logger.error('Failed to send alert email', { error: error.message, name: error.name });
+        logger.error('Failed to send alert email', { error: error.message, name: error.name, full: JSON.stringify(error) });
         return false;
       }
 
       logger.info('Alert email sent', { to: params.to, spot: params.spotName });
+      logger.info('Resend success');
       return true;
     } catch (err) {
-      logger.error('Failed to send alert email', {
+      logger.error('Failed to send alert email EXCEPTION', {
         error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
       });
       return false;
     }
