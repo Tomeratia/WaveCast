@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { startCronJobs } from './jobs/index.js';
 import { logger } from './lib/logger.js';
 
+import { emailService } from './services/emailService.js';
 import authRoutes from './routes/auth.js';
 import forecastRoutes from './routes/forecast.js';
 import favoritesRoutes from './routes/favorites.js';
@@ -33,6 +34,18 @@ app.use(verifyToken);
 
 // Health check — used by keep-alive ping to prevent Render cold starts
 app.get('/health', (_req, res) => { res.json({ ok: true }); });
+
+// Temporary test endpoint — remove after verifying email works
+app.get('/health/test-email', async (_req, res) => {
+  const sent = await emailService.sendSurfAlert({
+    to: 'tomeratia44@gmail.com',
+    spotName: 'Test Spot',
+    score: 85,
+    summary: 'Swell: 1.5m @ 12s | Wind: 15 km/h',
+    unsubscribeUrl: 'http://localhost',
+  });
+  res.json({ sent });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
