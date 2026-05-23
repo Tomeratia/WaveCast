@@ -5,7 +5,7 @@ import { logger } from '../lib/logger.js';
 
 export function startCronJobs(): void {
   // Check surf conditions every 30 minutes (5:00–20:00)
-  cron.schedule('*/30 5-20 * * *', () => {
+  cron.schedule('*/15 5-20 * * *', () => {
     runAlertChecker().catch((err) =>
       logger.error('Alert checker cron failed', { error: String(err) }),
     );
