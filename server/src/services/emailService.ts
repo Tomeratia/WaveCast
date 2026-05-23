@@ -8,9 +8,10 @@ function ensureInit(): boolean {
   if (resend) return true;
 
   if (!env.RESEND_API_KEY) {
-    logger.warn('Resend not configured — email features disabled');
+    logger.error('RESEND_API_KEY is missing — email features disabled');
     return false;
   }
+  logger.info('Resend initialized with key', { keyPrefix: env.RESEND_API_KEY.slice(0, 8) });
 
   resend = new Resend(env.RESEND_API_KEY);
   return true;
