@@ -42,14 +42,18 @@ app.get('/health/test-email', async (_req, res) => {
   const hasPassword = !!envConfig.GMAIL_APP_PASSWORD;
 
   try {
-    const sent = await emailService.sendSurfAlert({
-      to: 'tomeratia44@gmail.com',
-      spotName: 'Test Spot',
-      score: 85,
-      summary: 'Swell: 1.5m @ 12s | Wind: 15 km/h',
-      unsubscribeUrl: 'http://localhost',
+    const nodemailer = await import('nodemailer');
+    const transporter = nodemailer.default.createTransport({
+      service: 'gmail',
+      auth: { user: envConfig.GMAIL_USER, pass: envConfig.GMAIL_APP_PASSWORD },
     });
-    res.json({ sent, gmailUser, hasPassword });
+    await transporter.sendMail({
+      from: `"WaveCast" <${envConfig.GMAIL_USER}>`,
+      to: 'tomeratia44@gmail.com',
+      subject: 'WaveCast Test Email',
+      text: 'This is a test email from WaveCast.',
+    });
+    res.json({ sent: true, gmailUser, hasPassword });
   } catch (err) {
     res.json({ sent: false, gmailUser, hasPassword, error: err instanceof Error ? err.message : String(err) });
   }
