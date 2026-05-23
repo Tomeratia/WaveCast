@@ -8,7 +8,6 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { startCronJobs } from './jobs/index.js';
 import { logger } from './lib/logger.js';
 
-import { emailService } from './services/emailService.js';
 import authRoutes from './routes/auth.js';
 import forecastRoutes from './routes/forecast.js';
 import favoritesRoutes from './routes/favorites.js';
@@ -34,24 +33,6 @@ app.use(verifyToken);
 
 // Health check — used by keep-alive ping to prevent Render cold starts
 app.get('/health', (_req, res) => { res.json({ ok: true }); });
-
-// Temporary test endpoint — remove after verifying email works
-app.get('/health/test-email', async (_req, res) => {
-  try {
-    const { Resend } = await import('resend');
-    const { env: envConfig } = await import('./config/env.js');
-    const resend = new Resend(envConfig.RESEND_API_KEY);
-    const result = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: 'tomeratia44@gmail.com',
-      subject: 'WaveCast Test',
-      text: 'Test email from WaveCast',
-    });
-    res.json({ result });
-  } catch (err) {
-    res.json({ error: err instanceof Error ? err.message : String(err) });
-  }
-});
 
 // Routes
 app.use('/api/auth', authRoutes);
