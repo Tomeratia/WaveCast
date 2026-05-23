@@ -38,16 +38,18 @@ app.get('/health', (_req, res) => { res.json({ ok: true }); });
 // Temporary test endpoint — remove after verifying email works
 app.get('/health/test-email', async (_req, res) => {
   try {
-    const sent = await emailService.sendSurfAlert({
+    const { Resend } = await import('resend');
+    const { env: envConfig } = await import('./config/env.js');
+    const resend = new Resend(envConfig.RESEND_API_KEY);
+    const result = await resend.emails.send({
+      from: 'onboarding@resend.dev',
       to: 'tomeratia44@gmail.com',
-      spotName: 'Test Spot',
-      score: 85,
-      summary: 'Swell: 1.5m @ 12s | Wind: 15 km/h',
-      unsubscribeUrl: 'http://localhost',
+      subject: 'WaveCast Test',
+      text: 'Test email from WaveCast',
     });
-    res.json({ sent });
+    res.json({ result });
   } catch (err) {
-    res.json({ sent: false, error: err instanceof Error ? err.message : String(err) });
+    res.json({ error: err instanceof Error ? err.message : String(err) });
   }
 });
 
