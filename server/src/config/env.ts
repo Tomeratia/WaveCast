@@ -23,6 +23,9 @@ const envSchema = z.object({
   GMAIL_USER: z.string().email().optional(),
   GMAIL_APP_PASSWORD: z.string().min(1).optional(),
 
+  // Resend (optional — takes priority over Gmail if set)
+  RESEND_API_KEY: z.string().min(1).optional(),
+
   // Server
   PORT: z.coerce.number().default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

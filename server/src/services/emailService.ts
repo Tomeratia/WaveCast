@@ -1,25 +1,18 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
 
-let transporter: nodemailer.Transporter | null = null;
+let resend: Resend | null = null;
 
 function ensureInit(): boolean {
-  if (transporter) return true;
+  if (resend) return true;
 
-  if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
-    logger.warn('Gmail not configured — email features disabled');
+  if (!env.RESEND_API_KEY) {
+    logger.warn('Resend not configured — email features disabled');
     return false;
   }
 
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: env.GMAIL_USER,
-      pass: env.GMAIL_APP_PASSWORD,
-    },
-  });
-
+  resend = new Resend(env.RESEND_API_KEY);
   return true;
 }
 
@@ -34,12 +27,18 @@ export const emailService = {
     if (!ensureInit()) return false;
 
     try {
-      await transporter!.sendMail({
-        from: `"WaveCast" <${env.GMAIL_USER}>`,
+      const { error } = await resend!.emails.send({
+        from: 'WaveCast <onboarding@resend.dev>',
         to: params.to,
         subject: `WaveCast Alert: ${params.spotName} — Score ${params.score}/100`,
         html: buildAlertHtml(params),
       });
+
+      if (error) {
+        logger.error('Failed to send alert email', { error: error.message });
+        return false;
+      }
+
       logger.info('Alert email sent', { to: params.to, spot: params.spotName });
       return true;
     } catch (err) {
