@@ -37,14 +37,22 @@ app.get('/health', (_req, res) => { res.json({ ok: true }); });
 
 // Temporary test endpoint — remove after verifying email works
 app.get('/health/test-email', async (_req, res) => {
-  const sent = await emailService.sendSurfAlert({
-    to: 'tomeratia44@gmail.com',
-    spotName: 'Test Spot',
-    score: 85,
-    summary: 'Swell: 1.5m @ 12s | Wind: 15 km/h',
-    unsubscribeUrl: 'http://localhost',
-  });
-  res.json({ sent });
+  const { env: envConfig } = await import('./config/env.js');
+  const gmailUser = envConfig.GMAIL_USER;
+  const hasPassword = !!envConfig.GMAIL_APP_PASSWORD;
+
+  try {
+    const sent = await emailService.sendSurfAlert({
+      to: 'tomeratia44@gmail.com',
+      spotName: 'Test Spot',
+      score: 85,
+      summary: 'Swell: 1.5m @ 12s | Wind: 15 km/h',
+      unsubscribeUrl: 'http://localhost',
+    });
+    res.json({ sent, gmailUser, hasPassword });
+  } catch (err) {
+    res.json({ sent: false, gmailUser, hasPassword, error: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 // Routes
