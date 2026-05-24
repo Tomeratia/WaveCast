@@ -35,3 +35,6 @@ coverage/
 CLAUDE.md
 INSTALLED_PACKAGES.md
 handoff.md
+
+# Docs - not part of the codebase
+*.docx
