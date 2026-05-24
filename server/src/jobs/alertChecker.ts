@@ -5,6 +5,15 @@ import { emailService } from '../services/emailService.js';
 import { spotRepo } from '../repositories/spotRepo.js';
 import { logger } from '../lib/logger.js';
 
+function isInTimeWindow(timePref: string): boolean {
+  const hour = new Date().getHours();
+  if (timePref === 'dawn')    return hour >= 5  && hour < 9;
+  if (timePref === 'morning') return hour >= 9  && hour < 13;
+  if (timePref === 'noon')    return hour >= 13 && hour < 16;
+  if (timePref === 'sunset')  return hour >= 16 && hour < 19;
+  return true; // 'any'
+}
+
 function isSentToday(lastSentAt: Date | null): boolean {
   if (!lastSentAt) return false;
   const today = new Date();
@@ -22,6 +31,7 @@ export async function runAlertChecker(): Promise<void> {
 
   for (const alert of alerts) {
     if (isSentToday(alert.lastSentAt)) continue;
+    if (!isInTimeWindow(alert.timePref)) continue;
 
     const spot = await spotRepo.findById(alert.spotId);
     if (!spot) continue;
