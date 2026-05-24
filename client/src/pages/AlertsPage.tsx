@@ -8,6 +8,7 @@ import { DEMO_SPOTS } from '../data/spots';
 const SCORE_LABELS: Record<string, string> = {
   dawn: 'Dawn patrol (5–9 am)',
   morning: 'Morning (9 am–1 pm)',
+  noon: 'Noon (1–4 pm)',
   sunset: 'Sunset (4–7 pm)',
   any: 'Any time',
 };
@@ -36,7 +37,7 @@ export function AlertsPage() {
   const [showForm, setShowForm] = useState(false);
   const [formSpot, setFormSpot] = useState(DEMO_SPOTS[0]?.id ?? '');
   const [formScore, setFormScore] = useState(60);
-  const [formTime, setFormTime] = useState<'dawn' | 'morning' | 'sunset' | 'any'>('any');
+  const [formTime, setFormTime] = useState<'dawn' | 'morning' | 'noon' | 'sunset' | 'any'>('any');
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -152,7 +153,7 @@ export function AlertsPage() {
           <div>
             <label className="mb-1 block text-sm text-gray-300">Time of day</label>
             <div className="flex gap-2 flex-wrap">
-              {(['dawn', 'morning', 'sunset', 'any'] as const).map((t) => (
+              {(['dawn', 'morning', 'noon', 'sunset', 'any'] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
