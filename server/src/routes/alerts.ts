@@ -10,12 +10,12 @@ const router = Router();
 const createAlertSchema = z.object({
   spotId: z.string().min(1),
   minScore: z.number().int().min(0).max(100),
-  timePref: z.enum(['dawn', 'morning', 'any']),
+  timePref: z.enum(['dawn', 'morning', 'sunset', 'any']),
 });
 
 const updateAlertSchema = z.object({
   minScore: z.number().int().min(0).max(100).optional(),
-  timePref: z.enum(['dawn', 'morning', 'any']).optional(),
+  timePref: z.enum(['dawn', 'morning', 'sunset', 'any']).optional(),
   active: z.boolean().optional(),
 });
 
