@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Keep-alive ping every 9 minutes to prevent Render cold starts
+// Keep-alive ping every 9 minutes to prevent Railway cold starts
 setInterval(() => { api.get('/health').catch(() => {}); }, 9 * 60 * 1000);
 
 // 401 interceptor: attempt token refresh, then retry
