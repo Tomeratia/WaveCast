@@ -8,7 +8,7 @@ import { logger } from '../lib/logger.js';
 function isInTimeWindow(timePref: string): boolean {
   const hour = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem', hour: 'numeric', hour12: false }) as unknown as number | string;
   const h = Number(hour);
-  if (timePref === 'dawn')    return h >= 5  && h < 9;
+  if (timePref === 'dawn')    return h >= 16 && h < 18; // TEMP TEST
   if (timePref === 'morning') return h >= 9  && h < 13;
   if (timePref === 'noon')    return h >= 13 && h < 16;
   if (timePref === 'sunset')  return h >= 16 && h < 19;
