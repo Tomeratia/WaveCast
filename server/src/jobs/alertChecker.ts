@@ -6,11 +6,12 @@ import { spotRepo } from '../repositories/spotRepo.js';
 import { logger } from '../lib/logger.js';
 
 function isInTimeWindow(timePref: string): boolean {
-  const hour = new Date().getHours();
-  if (timePref === 'dawn')    return hour >= 5  && hour < 9;
-  if (timePref === 'morning') return hour >= 9  && hour < 13;
-  if (timePref === 'noon')    return hour >= 13 && hour < 16;
-  if (timePref === 'sunset')  return hour >= 16 && hour < 19;
+  const hour = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem', hour: 'numeric', hour12: false }) as unknown as number | string;
+  const h = Number(hour);
+  if (timePref === 'dawn')    return h >= 5  && h < 9;
+  if (timePref === 'morning') return h >= 9  && h < 13;
+  if (timePref === 'noon')    return h >= 13 && h < 16;
+  if (timePref === 'sunset')  return h >= 16 && h < 19;
   return true; // 'any'
 }
 
