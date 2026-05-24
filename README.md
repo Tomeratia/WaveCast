@@ -7,6 +7,10 @@ Real-time wave forecasts, surf spot ratings, personalized alerts, and tide chart
 
 ---
 
+![Architecture](docs/architecture.png)
+
+---
+
 ## Features
 
 - **Wave forecasts** - 7-day hourly forecasts powered by Open-Meteo Marine API
