@@ -11,6 +11,11 @@ export async function registerApi(email: string, name: string, password: string)
   return res.data.data!;
 }
 
+export async function refreshApi(): Promise<AuthResponse> {
+  const res = await api.post<ApiResponse<AuthResponse>>('/api/auth/refresh');
+  return res.data.data!;
+}
+
 export async function logoutApi(): Promise<void> {
   await api.post('/api/auth/logout');
 }

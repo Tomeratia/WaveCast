@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { UserDTO } from '@shared/types';
 import { setAccessTokenGetter } from '../services/api';
+import { refreshApi } from '../services/authClient';
 
 interface AuthState {
   user: UserDTO | null;
@@ -22,6 +23,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setAccessTokenGetter(() => state.accessToken);
   }, [state.accessToken]);
+
+  // On page load, try to restore session via refresh token cookie
+  useEffect(() => {
+    refreshApi()
+      .then((result) => setState({ user: result.user, accessToken: result.accessToken }))
+      .catch(() => {}); // no cookie = stay logged out, silently
+  }, []);
 
   const login = useCallback((user: UserDTO, token: string) => {
     setState({ user, accessToken: token });
