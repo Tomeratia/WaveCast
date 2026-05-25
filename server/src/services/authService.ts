@@ -59,13 +59,13 @@ export const authService = {
     }
   },
 
-  async refreshAccessToken(refreshTokenValue: string): Promise<{ accessToken: string }> {
+  async refreshAccessToken(refreshTokenValue: string): Promise<AuthResponse> {
     const payload = this.verifyRefreshToken(refreshTokenValue);
     const user = await userRepo.findById(payload.sub);
     if (!user) {
       throw new AuthError('User not found');
     }
     const accessToken = generateAccessToken(user.id, user.email);
-    return { accessToken };
+    return { accessToken, user: userRepo.toDTO(user) };
   },
 };

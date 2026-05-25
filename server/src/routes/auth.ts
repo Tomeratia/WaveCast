@@ -55,7 +55,7 @@ router.post('/refresh', async (req, res) => {
   }
 
   const result = await authService.refreshAccessToken(token);
-  const response: ApiResponse<{ accessToken: string }> = { success: true, data: result };
+  const response: ApiResponse<AuthResponse> = { success: true, data: result };
   res.json(response);
 });
 
