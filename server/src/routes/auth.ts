@@ -39,8 +39,8 @@ router.post('/login', async (req, res) => {
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: process.env['NODE_ENV'] === 'production',
-    sameSite: 'strict',
+    secure: true,
+    sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
@@ -60,7 +60,7 @@ router.post('/refresh', async (req, res) => {
 });
 
 router.post('/logout', (_req, res) => {
-  res.clearCookie('refreshToken');
+  res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'none' });
   const response: ApiResponse<null> = { success: true, data: null };
   res.json(response);
 });
